@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import http from "./api/http"; // IMPORTANT: import axios instance
+import { ToastProvider } from "./components/ui/use-toast";
+import { Toaster } from "./components/ui/toaster";
+
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -48,6 +51,7 @@ function App() {
   }
 
   return (
+    <ToastProvider>
     <BrowserRouter>
       <Routes>
 
@@ -77,6 +81,8 @@ function App() {
 
       </Routes>
     </BrowserRouter>
+    <Toaster />
+    </ToastProvider>
   );
 }
 

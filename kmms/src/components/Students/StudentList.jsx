@@ -25,52 +25,40 @@ const StudentList = ({
   students = [],
   teachers = [],
   onDelete,
-  onAdd, // optional: parent can pass a function to call addStudent API
+  onAdd,
+  onUpdate // optional: parent can pass a function to call addStudent API
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAgeGroup, setFilterAgeGroup] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    age: "",
-    className: "",
-    parentName: "",
-    teacherId: "",
-  });
+const [formData, setFormData] = useState({
+  name: "",
+  dateOfBirth: "",
+  gender: "",
+  registrationDate: "",
+  className: "",
+  parentName: "",
+  teacherId: "",
+});
 
-  // --- Helper: derive age group from age ---
-const computeAgeBucket = (age) => {
-  const n = Number(age);
-  if (!n) return null;
-  if (n === 4) return 4;
-  if (n === 5) return 5;
-  if (n === 6) return 6;
-  return null;
-};
+const calculateAge = (dateOfBirth) => {
+  if (!dateOfBirth) return "";
 
-const getAgeColor = (age) => {
-  switch (age) {
-    case 4:
-      return "bg-blue-100 text-blue-700";
-    case 5:
-      return "bg-green-100 text-green-700";
-    case 6:
-      return "bg-purple-100 text-purple-700";
-    default:
-      return "bg-gray-100 text-gray-700";
+  const dob = new Date(dateOfBirth);
+  const today = new Date();
+
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+    age--;
   }
+
+  return age;
 };
 
-  // // Attach derived ageGroup to each student (based on age)
-  // const enhancedStudents = useMemo(
-  //   () =>
-  //     (Array.isArray(students) ? students : []).map((s) => ({
-  //       ...s,
-  //       ageGroup: computeAgeBucket(s.age),
-  //     })),
-  //   [students]
-  // );
 
   // --- Filtering & search ---
   const filteredStudents = students.filter((student) => {
@@ -102,32 +90,42 @@ const stats = useMemo(
 
 
   // --- Add student submit handler ---
-  const handleAddSubmit = async (e) => {
-    e.preventDefault();
+const calculatedAge = calculateAge(formData.dateOfBirth);
+const handleAddSubmit = async (e) => {
+  e.preventDefault();
 
-    const payload = {
-      name: formData.name,
-      age: Number(formData.age) || undefined,
-      className: formData.className,
-      parentName: formData.parentName,
-      teacherId: formData.teacherId || undefined,
-      // parentId can be wired later if you add a parent dropdown
-    };
+const payload = {
+  name: formData.name,
+  dateOfBirth: formData.dateOfBirth,
+  gender: formData.gender,
+  registrationDate: formData.registrationDate,
+  className: formData.className,
+  parentName: formData.parentName,
+  teacherId: formData.teacherId || undefined,
+};
 
-    if (onAdd) {
-      await onAdd(payload);
-    }
+  if (editingStudent) {
+    // ✏️ EDIT MODE
+    await onUpdate(editingStudent._id, payload);
+  } else {
+    // ➕ ADD MODE
+    await onAdd(payload);
+  }
 
-    // Reset + close
-    setFormData({
-      name: "",
-      age: "",
-      className: "",
-      parentName: "",
-      teacherId: "",
-    });
-    setIsAddDialogOpen(false);
-  };
+  // Reset state
+setFormData({
+  name: "",
+  dateOfBirth: "",
+  gender: "",
+  registrationDate: "",
+  className: "",
+  parentName: "",
+  teacherId: "",
+});
+  setEditingStudent(null);
+  setIsAddDialogOpen(false);
+};
+
 
   const handleDeleteClick = (id) => {
     if (!onDelete) return;
@@ -159,7 +157,9 @@ const stats = useMemo(
 
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Add New Student</DialogTitle>
+              <DialogTitle>
+              {editingStudent ? "Edit Student" : "Add New Student"}
+              </DialogTitle>
             </DialogHeader>
 
             <form onSubmit={handleAddSubmit} className="space-y-4 py-2">
@@ -173,14 +173,34 @@ const stats = useMemo(
                   }
                 />
                 <Input
-                  placeholder="Age"
-                  type="number"
-                  min="1"
-                  value={formData.age}
+                  type="date"
+                  value={formData.dateOfBirth}
                   onChange={(e) =>
-                    setFormData({ ...formData, age: e.target.value })
+                    setFormData({ ...formData, dateOfBirth: e.target.value })
                   }
+                  required
                 />
+                  <select
+                    className="border rounded-lg p-2 w-full"
+                    value={formData.gender}
+                    onChange={(e) =>
+                      setFormData({ ...formData, gender: e.target.value })
+                    }
+                    required
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                <Input
+                    type="date"
+                    value={formData.registrationDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, registrationDate: e.target.value })
+                    }
+                    required
+                  />
+                
               </div>
 
               {/* Class + Teacher */}
@@ -229,7 +249,7 @@ const stats = useMemo(
                   Cancel
                 </Button>
                 <Button type="submit" className="flex-1">
-                  Save
+                  {editingStudent ? "Update" : "Save"}
                 </Button>
               </div>
             </form>
@@ -315,15 +335,17 @@ const stats = useMemo(
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Age</TableHead>
-                <TableHead>Age Group</TableHead>
-                <TableHead>Parent</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Teacher</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
+            <TableRow>
+              <TableHead>Student</TableHead>
+              <TableHead>Age</TableHead>
+              <TableHead>Gender</TableHead>
+              <TableHead>Date of Birth</TableHead>
+              <TableHead>Reg. Date</TableHead>
+              <TableHead>Parent</TableHead>
+              <TableHead>Class</TableHead>
+              <TableHead>Teacher</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
             </TableHeader>
 
             <TableBody>
@@ -354,13 +376,23 @@ const stats = useMemo(
                     {/* Age */}
                     <TableCell>{student.age || "-"}</TableCell>
 
-                    {/* Age group badge */}
-                    <TableCell>
-                    <Badge className={getAgeColor(Number(student.age))}>
-                      {student.age ? `${student.age} Years` : "N/A"}
-                    </Badge>
+                    {/* Gender */}
+                    <TableCell>{student.gender || "-"}</TableCell>
 
+                    {/* Date of Birth */}
+                    <TableCell>
+                      {student.dateOfBirth
+                        ? new Date(student.dateOfBirth).toLocaleDateString()
+                        : "-"}
                     </TableCell>
+
+                    {/* Registration Date */}
+                    <TableCell>
+                      {student.registrationDate
+                        ? new Date(student.registrationDate).toLocaleDateString()
+                        : "-"}
+                    </TableCell>
+
 
                     {/* Parent */}
                     <TableCell>{student.parentName || "-"}</TableCell>
@@ -375,11 +407,30 @@ const stats = useMemo(
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
-                          type="button"
-                          className="bg-transparent text-gray-600 hover:bg-gray-100 px-2 py-1"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                        type="button"
+                        className="bg-transparent text-gray-600 hover:bg-gray-100 px-2 py-1"
+                        onClick={() => {
+                          setEditingStudent(student);
+                          setFormData({
+                          name: student.name || "",
+                          dateOfBirth: student.dateOfBirth
+                            ? student.dateOfBirth.split("T")[0]
+                            : "",
+                          gender: student.gender || "",
+                          registrationDate: student.registrationDate
+                            ? student.registrationDate.split("T")[0]
+                            : "",
+                          className: student.className || "",
+                          parentName: student.parentName || "",
+                          teacherId: student.teacherId?._id || "",
+                        });
+
+                          setIsAddDialogOpen(true);
+                        }}
+                      >
+                        <Edit className="w-4 h-4 text-gray-600" />
+                      </Button>
+
 
                         <Button
                           type="button"

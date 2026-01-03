@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 import StudentList from "../components/Students/StudentList";
-import AddStudentModal from "../components/Students/AddStudentModal";
 import { getStudents, addStudent, deleteStudent } from "../api/students";
-import { getTeachers } from "../api/teachers"; // create this later
+import { getTeachers } from "../api/teachers";
+import { useToast } from "../components/ui/use-toast";
+import { updateStudent } from "../api/students";
 
 export default function Students() {
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
 
-  // Load students + teachers from backend
+  const { toast } = useToast(); // ✅ FIX
+
   useEffect(() => {
     loadData();
   }, []);
@@ -18,10 +19,8 @@ export default function Students() {
   const loadData = async () => {
     try {
       setLoading(true);
-
       const studentData = await getStudents();
       const teacherData = await getTeachers();
-
       setStudents(studentData);
       setTeachers(teacherData);
     } catch (error) {
@@ -31,18 +30,28 @@ export default function Students() {
     }
   };
 
-  // Add student → backend
   const handleAddStudent = async (form) => {
     try {
       await addStudent(form);
-      setShowModal(false);
+
+      toast({
+        title: "Student added",
+        description: `${form.name} has been successfully added.`,
+      });
+
       loadData();
     } catch (error) {
-      console.error("Error adding student:", error);
+      toast({
+        title: "Failed to add student",
+        description:
+          error.response?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
+
+      throw error;
     }
   };
 
-  // Delete student → backend
   const handleDeleteStudent = async (id) => {
     try {
       await deleteStudent(id);
@@ -51,6 +60,29 @@ export default function Students() {
       console.error("Error deleting student:", error);
     }
   };
+
+  const handleUpdateStudent = async (id, data) => {
+  try {
+    await updateStudent(id, data);
+
+    toast({
+      title: "Student updated",
+      description: "Student information updated successfully.",
+    });
+
+    loadData();
+  } catch (error) {
+    toast({
+      title: "Failed to update student",
+      description:
+        error.response?.data?.message || "Something went wrong",
+      variant: "destructive",
+    });
+
+    throw error;
+  }
+};
+
 
   if (loading) {
     return (
@@ -62,24 +94,13 @@ export default function Students() {
 
   return (
     <div className="p-6">
-      {/* Student List */}
       <StudentList
-      students={students}
-      teachers={teachers}
-      onAdd={handleAddStudent}   // ⭐ THIS IS THE KEY
-      onDelete={handleDeleteStudent}
-      />
-
-
-      {/* Modal */}
-      {showModal && (
-        <AddStudentModal
-        onClose={() => setShowModal(false)}
-        onSave={handleAddStudent}
+        students={students}
         teachers={teachers}
+        onAdd={handleAddStudent}
+        onDelete={handleDeleteStudent}
+        onUpdate={handleUpdateStudent}
       />
-
-      )}
     </div>
   );
 }

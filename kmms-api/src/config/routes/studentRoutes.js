@@ -4,10 +4,35 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+
+
 /**
- * Helper: validate age (4–6 only)
+ * Helper: calculate age from date of birth
  */
-const isValidAge = (age) => Number.isInteger(age) && age >= 4 && age <= 6;
+const calculateAge = (dateOfBirth) => {
+  const dob = new Date(dateOfBirth);
+  const today = new Date();
+
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+
+  return age;
+};
+
+/**
+ * Helper: remove empty string values
+ */
+const sanitize = (obj) => {
+  Object.keys(obj).forEach((key) => {
+    if (obj[key] === "") {
+      delete obj[key];
+    }
+  });
+};
 
 // =============================
 // GET /api/students
@@ -33,36 +58,45 @@ router.get("/", protect, async (req, res, next) => {
 });
 
 // =============================
-// POST /api/students
-// Admin only
+// POST /api/students (Admin)
 // =============================
 router.post("/", protect, authorize("admin"), async (req, res, next) => {
   try {
-    const data = req.body;
+    let data = req.body;
 
     // ✅ BULK INSERT
     if (Array.isArray(data)) {
       for (const s of data) {
-        if (!isValidAge(s.age)) {
+        sanitize(s);
+
+        if (!s.dateOfBirth) {
           return res.status(400).json({
-            message: "Student age must be between 4 and 6 years",
+            message: "dateOfBirth is required",
           });
         }
+
+        s.age = calculateAge(s.dateOfBirth);
+
       }
 
       const students = await Student.insertMany(data, {
-        runValidators: true, // IMPORTANT
+        runValidators: true,
       });
 
       return res.status(201).json(students);
     }
 
     // ✅ SINGLE INSERT
-    if (!isValidAge(data.age)) {
+    sanitize(data);
+
+    if (!data.dateOfBirth) {
       return res.status(400).json({
-        message: "Student age must be between 4 and 6 years",
+        message: "dateOfBirth is required",
       });
     }
+
+    data.age = calculateAge(data.dateOfBirth);
+
 
     const student = await Student.create(data);
     return res.status(201).json(student);
@@ -72,24 +106,26 @@ router.post("/", protect, authorize("admin"), async (req, res, next) => {
 });
 
 // =============================
-// PUT /api/students/:id
-// Admin only
+// PUT /api/students/:id (Admin)
 // =============================
 router.put("/:id", protect, authorize("admin"), async (req, res, next) => {
   try {
-    // ✅ Validate age if provided
-    if (req.body.age !== undefined && !isValidAge(req.body.age)) {
-      return res.status(400).json({
-        message: "Student age must be between 4 and 6 years",
-      });
+    sanitize(req.body);
+
+    if (req.body.dateOfBirth) {
+      req.body.age = calculateAge(req.body.dateOfBirth);
+
+        // no age restriction
+
     }
 
     const updated = await Student.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { $set: req.body },
       {
         new: true,
-        runValidators: true, // IMPORTANT
+        runValidators: true,
+        context: "query",
       }
     );
 
@@ -105,7 +141,6 @@ router.put("/:id", protect, authorize("admin"), async (req, res, next) => {
 
 // =============================
 // DELETE /api/students/:id
-// Admin only
 // =============================
 router.delete("/:id", protect, authorize("admin"), async (req, res, next) => {
   try {
