@@ -1,135 +1,326 @@
-import React, { useEffect, useState } from "react";
-import { BookOpen, Trash2, Edit, UserPlus } from "lucide-react";
-import AddTeacherModal from "./AddTeacherModal";
-import EditTeacherModal from "./EditTeacherModal";
+import React, { useState } from "react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 
-import { getTeachers, addTeacher, deleteTeacher } from "../../api/teachers";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Badge } from "../ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
 
-const TeacherList = () => {
-  const [teachers, setTeachers] = useState([]);
-  const [loading, setLoading] = useState(true);
+const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState(null);
 
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editTeacher, setEditTeacher] = useState(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    classAssigned: "",
+    qualification: "",
+    hireDate: "",
+    epfNo: "",
+    taxNo: "",
+    status: "Active",
+  });
 
-  // Load teachers from backend
-  useEffect(() => {
-    loadTeachers();
-  }, []);
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      classAssigned: "",
+      qualification: "",
+      hireDate: "",
+      epfNo: "",
+      taxNo: "",
+      status: "Active",
+    });
+    setEditingTeacher(null);
+    setIsDialogOpen(false);
+  };
 
-  const loadTeachers = async () => {
-    try {
-      setLoading(true);
-      const data = await getTeachers();
-      setTeachers(data);
-    } catch (err) {
-      console.error("Failed to load teachers:", err);
-    } finally {
-      setLoading(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      classAssigned: formData.classAssigned,
+      qualification: formData.qualification,
+      hireDate: formData.hireDate,
+      epfNo: formData.epfNo,
+      taxNo: formData.taxNo,
+      status: formData.status,
+    };
+
+    if (!editingTeacher && formData.password) {
+      payload.password = formData.password;
     }
-  };
 
-  // ADD Teacher → backend
-  const handleAddTeacher = async (formData) => {
-    try {
-      await addTeacher(formData);
-      setShowAddModal(false);
-      loadTeachers(); // refresh list
-    } catch (err) {
-      console.error("Failed to add teacher:", err);
+    if (editingTeacher) {
+      await onUpdate(editingTeacher._id, payload);
+    } else {
+      await onAdd(payload);
     }
+
+    resetForm();
   };
-
-  // DELETE Teacher → backend
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this teacher?")) return;
-
-    try {
-      await deleteTeacher(id);
-      loadTeachers();
-    } catch (err) {
-      console.error("Delete teacher failed:", err);
-    }
-  };
-
-  // EDIT Teacher (only local unless backend PUT is made)
-  const handleEditTeacher = async (updated) => {
-    console.warn("⚠️ Update teacher not implemented in backend yet.");
-    setEditTeacher(null);
-  };
-
-  if (loading) {
-    return <p className="p-4 text-gray-600">Loading teachers...</p>;
-  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-800">Teacher Management</h2>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold">Teacher Management</h2>
+          <p className="text-sm text-gray-600">
+            Manage all teachers and assignments
+          </p>
+        </div>
 
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
-        >
-          <UserPlus className="w-5 h-5" />
-          Add Teacher
-        </button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Add Teacher
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
+                {editingTeacher ? "Edit Teacher" : "Add New Teacher"}
+              </DialogTitle>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <Input
+                placeholder="Full Name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                required
+              />
+
+              <Input
+                type="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                required
+              />
+
+              <Input
+                placeholder="Phone Number"
+                value={formData.phone}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
+                required
+              />
+
+              {!editingTeacher && (
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  required
+                />
+              )}
+
+              <Input
+                placeholder="Class Assigned (e.g. Nursery A)"
+                value={formData.classAssigned}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    classAssigned: e.target.value,
+                  })
+                }
+                required
+              />
+
+              <select
+                className="border rounded-lg p-2 w-full"
+                value={formData.qualification}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    qualification: e.target.value,
+                  })
+                }
+                required
+              >
+                <option value="">Select Qualification</option>
+                <option value="Diploma">Diploma</option>
+                <option value="Degree">Degree</option>
+              </select>
+
+              <Input
+                type="date"
+                value={formData.hireDate}
+                onChange={(e) =>
+                  setFormData({ ...formData, hireDate: e.target.value })
+                }
+                required
+              />
+
+              <Input
+                placeholder="EPF Number"
+                value={formData.epfNo}
+                onChange={(e) =>
+                  setFormData({ ...formData, epfNo: e.target.value })
+                }
+              />
+
+              <Input
+                placeholder="Tax Number"
+                value={formData.taxNo}
+                onChange={(e) =>
+                  setFormData({ ...formData, taxNo: e.target.value })
+                }
+              />
+
+              <select
+                className="border rounded-lg p-2 w-full"
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+
+              <div className="flex gap-2 pt-2">
+                <Button type="button" variant="secondary" onClick={resetForm}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  {editingTeacher ? "Update" : "Save"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Teacher Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {teachers.map((teacher) => (
-          <div key={teacher._id} className="bg-white rounded-xl shadow p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-green-600" />
-              </div>
+      {/* Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>All Teachers ({teachers.length})</CardTitle>
+        </CardHeader>
 
-              <div className="flex-1">
-                <p className="font-semibold">{teacher.name}</p>
-                <p className="text-sm text-gray-600">{teacher.email}</p>
-                <p className="text-xs text-gray-500">Role: {teacher.role}</p>
-              </div>
-            </div>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Teacher</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Class</TableHead>
+                <TableHead>Qualification</TableHead>
+                <TableHead>Hire Date</TableHead>
+                <TableHead>EPF No</TableHead>
+                <TableHead>Tax No</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
 
-            {/* Actions */}
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => setEditTeacher(teacher)}
-                className="flex-1 p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 text-sm"
-              >
-                <Edit className="w-4 h-4 inline mr-1" />
-                Edit
-              </button>
+            <TableBody>
+              {teachers.map((teacher) => (
+                <TableRow key={teacher._id}>
+                  <TableCell>{teacher.name}</TableCell>
+                  <TableCell>{teacher.email}</TableCell>
+                  <TableCell>{teacher.phone || "-"}</TableCell>
+                  <TableCell>{teacher.classAssigned || "-"}</TableCell>
+                  <TableCell>{teacher.qualification || "-"}</TableCell>
+                  <TableCell>
+                    {teacher.hireDate
+                      ? new Date(teacher.hireDate).toLocaleDateString()
+                      : "-"}
+                  </TableCell>
+                  <TableCell>{teacher.epfNo || "-"}</TableCell>
+                  <TableCell>{teacher.taxNo || "-"}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        teacher.status === "Active"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {teacher.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setEditingTeacher(teacher);
+                        setFormData({
+                          name: teacher.name || "",
+                          email: teacher.email || "",
+                          phone: teacher.phone || "",
+                          password: "",
+                          classAssigned: teacher.classAssigned || "",
+                          qualification: teacher.qualification || "",
+                          hireDate:
+                            teacher.hireDate?.split("T")[0] || "",
+                          epfNo: teacher.epfNo || "",
+                          taxNo: teacher.taxNo || "",
+                          status: teacher.status || "Active",
+                        });
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
 
-              <button
-                onClick={() => handleDelete(teacher._id)}
-                className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+                    <Button
+                      variant="ghost"
+                      onClick={() => onDelete(teacher._id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
 
-      {/* Add Modal */}
-      {showAddModal && (
-        <AddTeacherModal
-          onClose={() => setShowAddModal(false)}
-          onSave={handleAddTeacher}
-        />
-      )}
-
-      {/* Edit Modal (optional — requires backend PUT) */}
-      {editTeacher && (
-        <EditTeacherModal
-          teacher={editTeacher}
-          onClose={() => setEditTeacher(null)}
-          onSave={handleEditTeacher}
-        />
-      )}
+              {teachers.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-gray-500">
+                    No teachers found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 };

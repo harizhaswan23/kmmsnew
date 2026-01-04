@@ -17,6 +17,7 @@ import Reports from "../components/Reports/Reports";
 import Announcements from "../components/Announcements/Announcements";
 import TeacherStudentView from "../components/Teachers/TeacherStudentView";
 import Settings from "../components/Settings/Settings";
+import Teachers from "./Teachers";
 
 
 const Dashboard = ({ user, onLogout }) => {
@@ -43,7 +44,7 @@ const Dashboard = ({ user, onLogout }) => {
         return <Students mode="admin" />;
 
       if (activeTab === "teachers")
-        return <TeacherList />;
+        return <Teachers />;
 
       if (activeTab === "payments")
         return <PaymentManagement role="Admin" userId={user.id} />;
