@@ -1,96 +1,116 @@
 const Timetable = require("../models/Timetable");
 
-// GET /api/timetables?classId=&dayOfWeek=
-const getTimetables = async (req, res, next) => {
-  try {
-    const { classId, dayOfWeek } = req.query;
-    const filter = {};
+/**
+ * ADMIN — Create timetable slot
+ */
+exports.createTimetable = async (req, res) => {
+  const {
+    classId,
+    day,
+    subject,
+    startTime,
+    endTime,
+    teacherId,
+    color,
+  } = req.body;
 
-    if (classId) filter.classId = classId;
-    if (dayOfWeek) filter.dayOfWeek = dayOfWeek.toLowerCase();
+  const slot = await Timetable.create({
+    classId,
+    day,
+    subject,
+    startTime,
+    endTime,
+    teacherId,
+    color,
+    createdBy: req.user._id,
+  });
 
-    const docs = await Timetable.find(filter)
-      .populate("classId", "name level")
-      .sort({ dayOfWeek: 1 });
-
-    res.json(docs);
-  } catch (err) {
-    next(err);
-  }
+  res.status(201).json(slot);
 };
 
-// GET /api/timetables/:id
-const getTimetableById = async (req, res, next) => {
-  try {
-    const doc = await Timetable.findById(req.params.id).populate(
-      "classId",
-      "name level"
-    );
-    if (!doc) return res.status(404).json({ message: "Timetable not found" });
-    res.json(doc);
-  } catch (err) {
-    next(err);
-  }
-};
+/**
+ * ADMIN — Get timetable by class + day
+ */
+    exports.getTimetableByClass = async (req, res) => {
+      const filter = {};
 
-// POST /api/timetables
-// body: { classId, dayOfWeek, slots: [...] }
-const createTimetable = async (req, res, next) => {
-  try {
-    const payload = {
-      ...req.body,
-      dayOfWeek: req.body.dayOfWeek.toLowerCase(),
-      createdBy: req.user?._id,
+      if (req.query.classId) {
+        filter.classId = req.query.classId;
+      }
+
+      if (req.query.day) {
+        filter.day = req.query.day;
+      }
+
+      const timetable = await Timetable.find(filter)
+        .populate("teacherId", "name")
+        .populate("classId", "className")
+        .sort({ startTime: 1 });
+
+      res.json(timetable);
     };
 
-    const doc = await Timetable.create(payload);
-    res.status(201).json(doc);
+
+
+/**
+ * TEACHER — View own timetable
+ */
+exports.getTeacherTimetable = async (req, res) => {
+  try {
+    const teacherId = req.user._id;
+
+    const timetable = await Timetable.find({ teacherId })
+      .populate("classId", "className")
+      .populate("teacherId", "name");
+
+    res.json(timetable);
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: "Failed to load teacher timetable" });
   }
 };
 
-// PUT /api/timetables/:id
-const updateTimetable = async (req, res, next) => {
-  try {
-    const payload = {
-      ...req.body,
-      updatedBy: req.user?._id,
-    };
 
-    if (payload.dayOfWeek) {
-      payload.dayOfWeek = payload.dayOfWeek.toLowerCase();
+/**
+ * PARENT — View child's timetable (today)
+ */
+exports.getParentTimetableToday = async (req, res) => {
+  try {
+    // 1️⃣ Get parent user
+    const parent = req.user;
+
+    if (!parent.childStudentId) {
+      return res.json([]);
     }
 
-    const doc = await Timetable.findByIdAndUpdate(req.params.id, payload, {
-      new: true,
-    });
+    // 2️⃣ Get student
+    const student = await Student.findById(parent.childStudentId);
+    if (!student || !student.classId) {
+      return res.json([]);
+    }
 
-    if (!doc) return res.status(404).json({ message: "Timetable not found" });
+    // 3️⃣ Get today (Monday, Tuesday, ...)
+    const DAYS = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    const today = DAYS[new Date().getDay()];
 
-    res.json(doc);
+    // 4️⃣ Get timetable for today
+    const timetable = await Timetable.find({
+      classId: student.classId,
+      day: today,
+    })
+      .populate("teacherId", "name")
+      .populate("classId", "className");
+
+    res.json(timetable);
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: "Failed to load parent timetable" });
   }
 };
 
-// DELETE /api/timetables/:id
-const deleteTimetable = async (req, res, next) => {
-  try {
-    const deleted = await Timetable.findByIdAndDelete(req.params.id);
-    if (!deleted)
-      return res.status(404).json({ message: "Timetable not found" });
-
-    res.json({ message: "Timetable deleted" });
-  } catch (err) {
-    next(err);
-  }
-};
-
-module.exports = {
-  getTimetables,
-  getTimetableById,
-  createTimetable,
-  updateTimetable,
-  deleteTimetable,
-};

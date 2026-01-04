@@ -31,7 +31,7 @@ const Sidebar = ({
   const adminTabs = [
     { id: "users", label: "Student Management", icon: Users },
     { id: "teachers", label: "Teacher Management", icon: Users },
-    { id: "timetable", label: "Timetable", icon: Calendar }, // not wired yet
+    { id: "timetables", label: "Timetable", icon: Calendar }, // not wired yet
     { id: "attendance", label: "Attendance", icon: CheckCircle },
     { id: "leave", label: "Leave Request", icon: FileText },
     { id: "salary", label: "Salary", icon: Banknote },
@@ -45,7 +45,7 @@ const Sidebar = ({
     { id: "students", label: "My Students", icon: Users },
     { id: "activities", label: "Daily Activities", icon: Camera },
     { id: "attendance", label: "Attendance", icon: CheckCircle },
-    { id: "schedule", label: "My Schedule", icon: Calendar }, // not wired yet
+    { id: "timetables", label: "My Timetables", icon: Calendar }, // not wired yet
     { id: "leave-request", label: "Leave Request", icon: FileText },
     { id: "messages", label: "Messages", icon: MessageSquare }, // placeholder
     { id: "progress", label: "Progress Reports", icon: FileText }, // placeholder

@@ -24,6 +24,7 @@ import {
 const StudentList = ({
   students = [],
   teachers = [],
+  classes = [],
   onDelete,
   onAdd,
   onUpdate // optional: parent can pass a function to call addStudent API
@@ -38,7 +39,7 @@ const [formData, setFormData] = useState({
   dateOfBirth: "",
   gender: "",
   registrationDate: "",
-  className: "",
+  classId: "",
   parentName: "",
   teacherId: "",
 });
@@ -67,8 +68,10 @@ const calculateAge = (dateOfBirth) => {
     const matchesSearch =
       !q ||
       student.name?.toLowerCase().includes(q) ||
-      student.className?.toLowerCase().includes(q) ||
+      student.classId?.className?.toLowerCase().includes(q) ||
       student.parentName?.toLowerCase().includes(q);
+
+
 
     const matchesFilter =
   filterAgeGroup === "all" ||
@@ -99,7 +102,7 @@ const payload = {
   dateOfBirth: formData.dateOfBirth,
   gender: formData.gender,
   registrationDate: formData.registrationDate,
-  className: formData.className,
+  classId: formData.classId,
   parentName: formData.parentName,
   teacherId: formData.teacherId || undefined,
 };
@@ -118,7 +121,7 @@ setFormData({
   dateOfBirth: "",
   gender: "",
   registrationDate: "",
-  className: "",
+  classId: "",
   parentName: "",
   teacherId: "",
 });
@@ -200,18 +203,26 @@ setFormData({
                     }
                     required
                   />
-                
+                 {/* 🔧 CLASS DROPDOWN (ONLY CHANGE) */}
+              <select
+                className="border rounded-lg p-2 w-full"
+                value={formData.classId}
+                onChange={(e) =>
+                  setFormData({ ...formData, classId: e.target.value })
+                }
+                required
+              >
+                <option value="">Select Class</option>
+                {classes.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
               </div>
 
               {/* Class + Teacher */}
               <div className="grid grid-cols-2 gap-4">
-                <Input
-                  placeholder="Class (e.g. Nursery A)"
-                  value={formData.className}
-                  onChange={(e) =>
-                    setFormData({ ...formData, className: e.target.value })
-                  }
-                />
 
                 <select
                   className="border rounded-lg p-2 w-full"
@@ -366,9 +377,6 @@ setFormData({
                           <p className="font-medium text-gray-900">
                             {student.name}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            Class: {student.className || "-"}
-                          </p>
                         </div>
                       </div>
                     </TableCell>
@@ -398,7 +406,7 @@ setFormData({
                     <TableCell>{student.parentName || "-"}</TableCell>
 
                     {/* Class */}
-                    <TableCell>{student.className || "-"}</TableCell>
+                    <TableCell>{student.classId?.className || "-"}</TableCell>
 
                     {/* Teacher */}
                     <TableCell>{student.teacherId?.name || "-"}</TableCell>
@@ -420,7 +428,7 @@ setFormData({
                           registrationDate: student.registrationDate
                             ? student.registrationDate.split("T")[0]
                             : "",
-                          className: student.className || "",
+                          classId: student.classId?._id || "",
                           parentName: student.parentName || "",
                           teacherId: student.teacherId?._id || "",
                         });

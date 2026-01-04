@@ -47,9 +47,11 @@ router.get("/", protect, async (req, res, next) => {
       query.parentId = req.user._id;
     }
 
-    const students = await Student.find(query)
-      .populate("teacherId", "name email")
-      .populate("parentId", "name email");
+  const students = await Student.find(query)
+    .populate("classId", "className yearGroup")
+    .populate("teacherId", "name email")
+    .populate("parentId", "name email");
+
 
     res.json(students);
   } catch (err) {

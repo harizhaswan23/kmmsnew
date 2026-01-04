@@ -1,21 +1,26 @@
 import api from "./http";
 
-export const getTimetables = async (params = {}) => {
-  const res = await api.get("/timetables", { params });
+// ADMIN
+export const createTimetable = (data) =>
+  api.post("/timetables", data).then((res) => res.data);
+
+export const getTimetableByClass = async (classId) => {
+  const res = await api.get(`/timetables?classId=${classId}`);
   return res.data;
 };
 
-export const createTimetable = async (data) => {
-  const res = await api.post("/timetables", data);
+
+
+// TEACHER
+export const getTeacherTimetable = async () => {
+  const res = await api.get("/timetables/teacher");
   return res.data;
 };
 
-export const updateTimetable = async (id, data) => {
-  const res = await api.put(`/timetables/${id}`, data);
+
+// PARENT
+export const getParentTimetableToday = async () => {
+  const res = await api.get("/timetables/parent/today");
   return res.data;
 };
 
-export const deleteTimetable = async (id) => {
-  const res = await api.delete(`/timetables/${id}`);
-  return res.data;
-};

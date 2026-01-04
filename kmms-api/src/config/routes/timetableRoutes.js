@@ -2,22 +2,22 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  getTimetables,
-  getTimetableById,
   createTimetable,
-  updateTimetable,
-  deleteTimetable,
+  getTimetableByClass,
+  getTeacherTimetable,
+  getParentTimetableToday,
 } = require("../controllers/timetableController");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
 
-// Everyone logged in can view timetables
-router.get("/", protect, getTimetables);
-router.get("/:id", protect, getTimetableById);
-
-// Only admin can create / update / delete for now
+// ADMIN
 router.post("/", protect, authorize("admin"), createTimetable);
-router.put("/:id", protect, authorize("admin"), updateTimetable);
-router.delete("/:id", protect, authorize("admin"), deleteTimetable);
+router.get("/", protect, authorize("admin"), getTimetableByClass);
+
+// TEACHER
+router.get("/teacher", protect, authorize("teacher"), getTeacherTimetable);
+
+// PARENT
+router.get("/parent/today", protect, authorize("parent"), getParentTimetableToday);
 
 module.exports = router;

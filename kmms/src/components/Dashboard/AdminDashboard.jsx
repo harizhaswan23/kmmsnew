@@ -24,6 +24,7 @@ export default function AdminDashboard({ setActiveTab }) {
     present: 0,
     total: 0,
   });
+  // eslint-disable-next-line no-unused-vars
   const [revenue, setRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
 

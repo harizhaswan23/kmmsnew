@@ -2,34 +2,23 @@ const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
+    name: {
+      type: String,
+      required: true,
+    },
 
     age: {
       type: Number,
       required: true,
+      min: 4,
+      max: 6,
     },
 
-    // 🆕 Date of Birth (Admin must input)
-    dateOfBirth: {
-      type: Date,
-      required: true,
-    },
-
-    // 🆕 Gender (Admin must select)
-    gender: {
-      type: String,
-      enum: ["Male", "Female"],
-      required: true,
-    },
-
-    className: {
-      type: String,
-      required: true,
-    },
-
+    // ✅ NEW: reference Class
     classId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",
+      required: true,
     },
 
     parentName: {
@@ -39,23 +28,22 @@ const studentSchema = new mongoose.Schema(
 
     parentId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // role=parent
+      ref: "User",
     },
 
     teacherId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // role=teacher
+      ref: "User",
     },
 
-    // 🆕 Registration Date (Admin selects)
-    registrationDate: {
-      type: Date,
-      required: true,
+    dateOfBirth: Date,
+    registrationDate: Date,
+    gender: {
+      type: String,
+      enum: ["Male", "Female"],
     },
   },
-  {
-    timestamps: true, // createdAt & updatedAt still useful
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Student", studentSchema);

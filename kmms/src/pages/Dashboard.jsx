@@ -7,7 +7,7 @@ import ParentDashboard from "../components/Dashboard/ParentDashboard";
 import AdminTimetable from "../components/Timetable/AdminTimetable";
 import Students from "./Students";
 // import StudentList from "../components/Students/StudentList";
-import TeacherList from "../components/Teachers/TeacherList";
+//import TeacherList from "../components/Teachers/TeacherList";
 import AttendanceManagement from "../components/Attendance/AttendanceManagement";
 import ActivitiesTracking from "../components/Activities/ActivitiesTracking";
 import LeaveManagement from "../components/Leave/LeaveManagement";
@@ -18,6 +18,8 @@ import Announcements from "../components/Announcements/Announcements";
 import TeacherStudentView from "../components/Teachers/TeacherStudentView";
 import Settings from "../components/Settings/Settings";
 import Teachers from "./Teachers";
+import TeacherTimetable from "../components/Teachers/TeacherTimetable";
+import ParentTimetable from "../components/Timetable/ParentTimetable";
 
 
 const Dashboard = ({ user, onLogout }) => {
@@ -58,7 +60,7 @@ const Dashboard = ({ user, onLogout }) => {
       if (activeTab === "announcements")
         return <Announcements />;
 
-      if (activeTab === "timetable")
+      if (activeTab === "timetables")
         return <AdminTimetable />;
 
       if (activeTab === "settings")
@@ -76,7 +78,9 @@ const Dashboard = ({ user, onLogout }) => {
 
       if (activeTab === "students")
         return <TeacherStudentView />;
-
+      
+      if (activeTab === "timetables")
+        return <TeacherTimetable />;
 
       if (activeTab === "attendance")
         return <AttendanceManagement teacherId={user.id} />;
@@ -100,6 +104,9 @@ const Dashboard = ({ user, onLogout }) => {
     if (role === "parent") {
       if (activeTab === "dashboard")
         return <ParentDashboard setActiveTab={setActiveTab} />;
+
+      if (activeTab === "timetables")
+        return <ParentTimetable />;
 
       if (activeTab === "payments")
         return <PaymentManagement role="Parent" userId={user.id} />;
