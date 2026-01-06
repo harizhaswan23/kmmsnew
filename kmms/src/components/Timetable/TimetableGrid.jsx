@@ -1,98 +1,138 @@
 import React from "react";
+import { X } from "lucide-react";
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const TimetableGrid = ({ slots = [], onDeleteSlot }) => {
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  
+  // Time Range: 8:00 AM to 12:00 PM with 30-minute intervals
+  const timeIntervals = [
+    "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", 
+    "11:00", "11:30", "12:00"
+  ];
 
-export default function TimetableGrid({ slots = [] }) {
-  console.log("🟦 TimetableGrid slots:", slots);
+  // Helper: Convert time string to minutes
+  const getMinutes = (timeStr) => {
+    const [h, m] = timeStr.split(":").map(Number);
+    return h * 60 + m;
+  };
+
+  // Helper: Get position and width
+  const getSlotStyle = (start, end) => {
+    const startMin = getMinutes(start);
+    const endMin = getMinutes(end);
+    const dayStartMin = getMinutes("08:00"); 
+    
+    // Total duration: 4 hours (8am - 12pm) = 240 minutes
+    const totalDuration = 240; 
+    
+    const left = ((startMin - dayStartMin) / totalDuration) * 100;
+    const width = ((endMin - startMin) / totalDuration) * 100;
+
+    return {
+      left: `${left}%`,
+      width: `${width}%`,
+    };
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse border text-sm">
-        <thead>
-          <tr>
-            <th className="border p-2 bg-gray-100">Time</th>
-            {DAYS.map((day) => (
-              <th key={day} className="border p-2 bg-gray-100">
-                {day}
-              </th>
-            ))}
-          </tr>
-        </thead>
-
-        <tbody>
-          {getTimeRows(slots).map((time) => (
-            <tr key={time}>
-              <td className="border p-2 font-medium bg-gray-50">
+    <div className="min-w-[800px] p-4">
+      {/* --- HEADER ROW (TIMES) --- */}
+      <div className="flex border-b border-gray-200 mb-2 pb-2 sticky top-0 bg-white z-10 relative">
+        <div className="w-24 flex-shrink-0 font-bold text-gray-500 text-sm">Day</div>
+        <div className="flex-1 relative h-6">
+          {timeIntervals.map((time) => {
+            // REMOVED the check that hid ":30" times. Now all times show.
+            return (
+              <div 
+                key={time} 
+                className="absolute text-xs text-gray-500 font-medium -translate-x-1/2"
+                style={{ left: getSlotStyle(time, time).left }}
+              >
                 {time}
-              </td>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
-              {DAYS.map((day) => {
-                const slot = slots.find(
-                  (s) => s.day === day && s.startTime === time
-                );
+      {/* --- DAYS ROWS --- */}
+      <div className="space-y-4 relative">
+        
+        {/* FIXED SNACK TIME COLUMN (9:30 - 9:50) */}
+        <div 
+          className="absolute top-0 bottom-0 bg-orange-50/80 border-l border-r border-orange-200 z-0 flex flex-col items-center justify-center pointer-events-none"
+          style={{ 
+            ...getSlotStyle("09:30", "09:50"), 
+            left: `calc(${getSlotStyle("09:30", "09:50").left} + 6rem)`
+          }}
+        >
+          <div className="rotate-90 text-[10px] font-bold text-orange-400 uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
+             Snack
+          </div>
+        </div>
 
-                return (
-                  <td key={day} className="border p-2 h-16">
-                    {slot && (
-                      <div
-                        className="rounded p-2 text-white text-xs"
-                        style={{ backgroundColor: slot.color || "#60a5fa" }}
-                      >
-                        <div className="font-semibold">
-                          {slot.subject}
-                        </div>
-                        <div>
-                          {slot.startTime} – {slot.endTime}
-                        </div>
-                        <div className="opacity-90">
-                          {slot.teacherId?.name || ""}
-                        </div>
-                        <div className="opacity-80">
-                        {slot.classId?.className}
+        {days.map((day) => (
+          <div key={day} className="flex items-center group relative h-16 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors z-10">
+            
+            {/* Day Label */}
+            <div className="w-24 flex-shrink-0 font-semibold text-gray-700 text-sm bg-white z-20">
+              {day}
+            </div>
+
+            {/* Timetable Lane */}
+            <div className="flex-1 relative h-full bg-gray-50/50 rounded-lg">
+              
+              {/* Grid Lines for ALL intervals (including 8:30, 9:30, etc.) */}
+              {timeIntervals.map((time) => (
+                  <div
+                    key={time}
+                    // Dashed lines for all times to make alignment easier
+                    className="absolute top-0 bottom-0 border-l border-gray-200 border-dashed"
+                    style={{ left: getSlotStyle(time, time).left }}
+                  />
+              ))}
+
+              {/* Slots */}
+              {slots
+                .filter((slot) => slot.day === day)
+                .map((slot) => {
+                  const style = getSlotStyle(slot.startTime, slot.endTime);
+                  
+                  return (
+                    <div
+                      key={slot.id}
+                      className="absolute top-1 bottom-1 rounded-md px-2 py-1 text-xs shadow-sm bg-blue-100 border-l-4 border-blue-500 text-blue-800 overflow-hidden flex flex-col justify-center hover:z-30 hover:shadow-md transition-all cursor-pointer group/slot"
+                      style={style}
+                      title={`${slot.startTime} - ${slot.endTime}: ${slot.subject}`}
+                    >
+                      <div className="font-bold truncate leading-tight">
+                        {slot.subject}
                       </div>
-
+                      <div className="text-[10px] opacity-80 truncate">
+                        {slot.teacher}
                       </div>
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* LEGEND */}
-      <div className="flex flex-wrap gap-3 mt-4">
-        {getLegend(slots).map((l) => (
-          <div key={l.subject} className="flex items-center gap-2 text-sm">
-            <span
-              className="w-4 h-4 rounded"
-              style={{ backgroundColor: l.color }}
-            />
-            {l.subject}
+                      
+                      {/* Delete Button */}
+                      {onDeleteSlot && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteSlot(slot.id);
+                          }}
+                          className="absolute top-1 right-1 hidden group-hover/slot:block text-red-500 hover:text-red-700 bg-white/80 rounded-full p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         ))}
       </div>
     </div>
   );
-}
+};
 
-/* ---------- helpers ---------- */
-
-function getTimeRows(slots) {
-  const times = slots.map((s) => s.startTime);
-  return [...new Set(times)].sort();
-}
-
-function getLegend(slots) {
-  const map = {};
-  slots.forEach((s) => {
-    if (!map[s.subject]) {
-      map[s.subject] = s.color || "#60a5fa";
-    }
-  });
-
-  return Object.entries(map).map(([subject, color]) => ({
-    subject,
-    color,
-  }));
-}
+export default TimetableGrid;

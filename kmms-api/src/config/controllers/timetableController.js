@@ -50,7 +50,17 @@ exports.createTimetable = async (req, res) => {
       res.json(timetable);
     };
 
-
+/**
+ * ADMIN — Delete timetable
+ */
+exports.deleteTimetable = async (req, res) => {
+  try {
+    await Timetable.findByIdAndDelete(req.params.id);
+    res.json({ message: "Timetable slot deleted" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to delete slot" });
+  }
+};
 
 /**
  * TEACHER — View own timetable
