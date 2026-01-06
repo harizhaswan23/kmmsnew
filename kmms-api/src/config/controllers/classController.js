@@ -25,11 +25,16 @@ exports.getClass = async (req, res, next) => {
 // CREATE class
 exports.createClass = async (req, res, next) => {
   try {
-    const { className, level } = req.body;
+    // 1. Get the data from the frontend
+    // Note: If your frontend sends 'level', map it to 'yearGroup'. 
+    // If it sends 'yearGroup', use it directly.
+    const { className, yearGroup, level } = req.body;
 
     const newClass = await Class.create({
       className,
-      level,
+      // 2. Pass the correct field name 'yearGroup' to the database
+      // This creates a fallback: use yearGroup if present, otherwise use level
+      yearGroup: yearGroup || level, 
     });
 
     res.status(201).json(newClass);

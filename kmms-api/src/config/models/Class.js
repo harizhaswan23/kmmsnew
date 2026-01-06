@@ -11,11 +11,6 @@ const classSchema = new mongoose.Schema(
       enum: [4, 5, 6],
       required: true,
     },
-    status: {
-      type: String,
-      enum: ["Active", "Inactive"],
-      default: "Active",
-    },
   },
   { timestamps: true }
 );
