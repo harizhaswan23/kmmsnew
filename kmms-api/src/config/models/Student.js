@@ -42,6 +42,13 @@ const studentSchema = new mongoose.Schema(
       type: String,
       enum: ["Male", "Female"],
     },
+
+    status: {
+    type: String,
+    enum: ["active", "graduated"],
+    default: "active",
+    },
+
   },
   { timestamps: true }
 );

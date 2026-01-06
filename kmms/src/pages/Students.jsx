@@ -7,13 +7,13 @@ import {
   updateStudent,
 } from "../api/students";
 import { getTeachers } from "../api/teachers";
-import { getClasses } from "../api/classes";
+import { getClasses, addClass } from "../api/classes";
 import { useToast } from "../components/ui/use-toast";
 
 export default function Students() {
   const [students, setStudents] = useState([]);
   const [teachers, setTeachers] = useState([]);
-  const [classes, setClasses] = useState([]); // ✅ classes state
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const { toast } = useToast();
@@ -29,7 +29,7 @@ export default function Students() {
       const [studentData, teacherData, classData] = await Promise.all([
         getStudents(),
         getTeachers(),
-        getClasses(), // ✅ fetch classes
+        getClasses(),
       ]);
 
       setStudents(Array.isArray(studentData) ? studentData : []);
@@ -93,6 +93,27 @@ export default function Students() {
     }
   };
 
+  const handleAddClass = async (classData) => {
+    try {
+      await addClass(classData);
+
+      toast({
+        title: "Class added",
+        description: `${classData.className} has been successfully created.`,
+      });
+
+      loadData();
+    } catch (error) {
+      toast({
+        title: "Failed to add class",
+        description:
+          error.response?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6 text-center text-gray-600">
@@ -106,10 +127,11 @@ export default function Students() {
       <StudentList
         students={students}
         teachers={teachers}
-        classes={classes}          // ✅ PASS CLASSES
+        classes={classes}
         onAdd={handleAddStudent}
         onUpdate={handleUpdateStudent}
         onDelete={handleDeleteStudent}
+        onAddClass={handleAddClass}
       />
     </div>
   );
