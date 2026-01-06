@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
+      trim: true, // <--- ADD THIS (Removes " " spaces automatically)
     },
 
     password: { type: String, required: true },
@@ -20,15 +21,12 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
-    // Parent
+    // ... rest of your code remains the same ...
     childStudentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
     },
-
     profileImage: { type: String, default: "" },
-
-    // 🔽 Teacher-specific fields (INSIDE schema)
     phone: String,
     qualification: { type: String, enum: ["Diploma", "Degree"] },
     hireDate: Date,
