@@ -5,20 +5,17 @@ const generateToken = require("../../utils/generateToken");
 exports.registerUser = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
-    
-    // Sanitize
-    const normalizedEmail = email ? email.trim().toLowerCase() : "";
-    const cleanPassword = password ? password.trim() : "";
+    const cleanEmail = email.toLowerCase().trim();
 
-    const userExists = await User.findOne({ email: normalizedEmail });
+    const userExists = await User.findOne({ email: cleanEmail });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
     const user = await User.create({
       name,
-      email: normalizedEmail,
-      password: cleanPassword,
+      email: cleanEmail,
+      password: password.trim(),
       role: role.toLowerCase(),
     });
 
@@ -38,53 +35,51 @@ exports.registerUser = async (req, res, next) => {
 exports.loginUser = async (req, res, next) => {
   try {
     const { email, password, role } = req.body;
-
-    // 1. Sanitize Inputs (Trim spaces & Lowercase email)
-    const normalizedEmail = email ? email.trim().toLowerCase() : "";
+    console.log("--- LOGIN ATTEMPT ---");
+    
+    const cleanEmail = email ? email.toLowerCase().trim() : "";
     const cleanPassword = password ? password.trim() : "";
 
-    console.log(`Login Attempt: ${normalizedEmail}`);
+    console.log("Email:", cleanEmail);
 
-    // 2. Find user
-    const user = await User.findOne({ email: normalizedEmail });
+    const user = await User.findOne({ email: cleanEmail });
 
     if (!user) {
       console.log("❌ User not found");
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // 3. Check password
+    console.log("✅ User found:", user.email);
+    console.log("🔑 Stored Hash ends with:", user.password.slice(-5)); // Log partial hash for safety
+
+    // Match Password
     const isMatch = await user.matchPassword(cleanPassword);
     
-    if (!isMatch) {
-      console.log("❌ Password Mismatch");
-      return res.status(401).json({ message: "Invalid email or password" });
+    if (isMatch) {
+      // Check Role
+      if (role && user.role !== role.toLowerCase() && user.role !== role) {
+         console.log("❌ Role mismatch");
+         return res.status(401).json({ message: "Role mismatch" });
+      }
+
+      console.log("✅ Login Successful");
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        childStudentId: user.childStudentId,
+        token: generateToken(user._id),
+      });
+    } else {
+      console.log("❌ Password mismatch");
+      res.status(401).json({ message: "Invalid email or password" });
     }
-
-    // 4. Role Check (Case insensitive)
-    if (role && user.role.toLowerCase() !== role.toLowerCase()) {
-      console.log(`❌ Role Mismatch (Exp: ${user.role}, Got: ${role})`);
-      return res.status(401).json({ message: "Role mismatch" });
-    }
-
-    console.log("✅ Login Successful");
-
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      childStudentId: user.childStudentId || null,
-      token: generateToken(user._id),
-    });
-
   } catch (err) {
-    console.error("Login Error:", err);
     next(err);
   }
 };
 
-// GET ME
 exports.getMe = async (req, res) => {
   res.json(req.user);
 };

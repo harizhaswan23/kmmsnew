@@ -1,7 +1,7 @@
 const Student = require("../models/Student");
 const User = require("../models/User");
+const bcrypt = require("bcryptjs"); // Import bcryptjs
 
-// Helper to calculate age
 const calculateAge = (dob) => {
   if (!dob) return 0;
   const diff = Date.now() - new Date(dob).getTime();
@@ -9,7 +9,6 @@ const calculateAge = (dob) => {
   return Math.abs(ageDate.getUTCFullYear() - 1970);
 };
 
-// GET students
 exports.getStudents = async (req, res, next) => {
   try {
     let query = {};
@@ -27,47 +26,38 @@ exports.getStudents = async (req, res, next) => {
   }
 };
 
-// GET single student
 exports.getStudent = async (req, res, next) => {
   try {
-    const student = await Student.findById(req.params.id)
+    const s = await Student.findById(req.params.id)
       .populate("teacherId", "name")
       .populate("parentId", "name")
       .populate("classId", "className");
-    
-    if (!student) return res.status(404).json({ message: "Student not found" });
-    res.json(student);
-  } catch (err) {
-    next(err);
-  }
+    if (!s) return res.status(404).json({ message: "Student not found" });
+    res.json(s);
+  } catch (err) { next(err); }
 };
 
-// CREATE Student + Parent Account
+// CREATE STUDENT (With Manual Hashing Fix)
 exports.createStudent = async (req, res, next) => {
   try {
     const {
-      name,
-      dateOfBirth,
-      gender,
-      registrationDate,
-      classId,
-      parentName,
-      parentEmail,
-      parentPassword,
-      teacherId,
-      status,
+      name, dateOfBirth, gender, registrationDate, classId,
+      parentName, parentEmail, parentPassword, teacherId, status
     } = req.body;
+
+    console.log("--- CREATING STUDENT ---");
 
     // 1. Calculate Age
     const age = calculateAge(dateOfBirth);
 
-    // 2. Sanitize Parent Credentials (TRIM SPACES)
-    const sanitizedEmail = parentEmail ? parentEmail.trim().toLowerCase() : "";
-    const sanitizedPassword = parentPassword ? parentPassword.trim() : "";
+    // 2. Validate Parent
+    if (parentEmail && !parentPassword) {
+      return res.status(400).json({ message: "Parent password is required." });
+    }
 
-    // 3. Check if parent email exists
-    if (sanitizedEmail) {
-      const existingUser = await User.findOne({ email: sanitizedEmail });
+    // 3. Check existing email
+    if (parentEmail) {
+      const existingUser = await User.findOne({ email: parentEmail.toLowerCase().trim() });
       if (existingUser) {
         return res.status(400).json({ message: "Parent email already exists." });
       }
@@ -75,28 +65,32 @@ exports.createStudent = async (req, res, next) => {
 
     // 4. Create Student
     const newStudent = await Student.create({
-      name,
-      dateOfBirth,
-      age,
-      gender,
-      registrationDate,
-      classId,
-      parentName,
-      teacherId: teacherId || undefined,
-      status: status || "active",
+      name, dateOfBirth, age, gender, registrationDate, classId,
+      parentName, teacherId: teacherId || undefined, status: status || "active",
     });
 
-    // 5. Create Parent User (With Sanitized Data)
-    if (sanitizedEmail && sanitizedPassword) {
-      const newParent = await User.create({
+    // 5. Create Parent User (MANUALLY HASH PASSWORD)
+    if (parentEmail && parentPassword) {
+      const cleanEmail = parentEmail.toLowerCase().trim();
+      const cleanPassword = parentPassword.trim();
+
+      // Hash it here to be safe
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(cleanPassword, salt);
+
+      const newParent = new User({
         name: parentName,
-        email: sanitizedEmail,
-        password: sanitizedPassword, // This triggers the hash hook in User model
+        email: cleanEmail,
+        password: hashedPassword, // Store the hash directly
         role: "parent",
         childStudentId: newStudent._id,
       });
 
-      // Link Student -> Parent
+      await newParent.save(); // User.js hook will skip hashing because it detects the hash
+      
+      console.log("✅ Parent Created:", cleanEmail);
+
+      // Link Student
       newStudent.parentId = newParent._id;
       await newStudent.save();
     }
@@ -108,30 +102,18 @@ exports.createStudent = async (req, res, next) => {
   }
 };
 
-// UPDATE Student
 exports.updateStudent = async (req, res, next) => {
   try {
-    if (req.body.dateOfBirth) {
-      req.body.age = calculateAge(req.body.dateOfBirth);
-    }
-    const updated = await Student.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    if (req.body.dateOfBirth) req.body.age = calculateAge(req.body.dateOfBirth);
+    const updated = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updated) return res.status(404).json({ message: "Student not found" });
     res.json(updated);
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 };
 
-// DELETE Student
 exports.deleteStudent = async (req, res, next) => {
   try {
-    const student = await Student.findByIdAndDelete(req.params.id);
-    if (!student) return res.status(404).json({ message: "Student not found" });
+    await Student.findByIdAndDelete(req.params.id);
     res.json({ message: "Student removed" });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 };

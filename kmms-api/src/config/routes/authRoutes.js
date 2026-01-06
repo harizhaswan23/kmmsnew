@@ -1,11 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { registerUser, loginUser, getMe } = require("../controllers/authController");
+// Import the controller functions
+const { registerUser, loginUser, getMe } = require("../controllers/authController"); 
 const { protect } = require("../middleware/authMiddleware");
 
-// Use the Controller functions instead of writing logic here
+// Use the controller functions
 router.post("/register", registerUser);
-router.post("/login", loginUser);
+router.post("/login", loginUser); // Points to authController.js
 router.get("/me", protect, getMe);
 
 module.exports = router;

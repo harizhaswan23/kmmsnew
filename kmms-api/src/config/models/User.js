@@ -4,24 +4,18 @@ const bcrypt = require("bcryptjs");
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-
     email: {
       type: String,
       required: true,
       unique: true,
       lowercase: true,
-      trim: true, // <--- ADD THIS (Removes " " spaces automatically)
     },
-
     password: { type: String, required: true },
-
     role: {
       type: String,
       enum: ["admin", "teacher", "parent"],
       required: true,
     },
-
-    // ... rest of your code remains the same ...
     childStudentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
@@ -42,9 +36,15 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Hash password
+// Hash password (FIXED: Prevents Double Hashing)
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
+
+  // If password starts with $2, it's likely already hashed. Skip.
+  if (this.password && this.password.startsWith("$2")) {
+    return next();
+  }
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
