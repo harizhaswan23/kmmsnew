@@ -639,7 +639,7 @@ const StudentList = ({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
+                <TableHead>Student</TableHead>  
                 <TableHead>Age</TableHead>
                 <TableHead>Gender</TableHead>
                 <TableHead>Date of Birth</TableHead>
@@ -653,7 +653,7 @@ const StudentList = ({
             </TableHeader>
 
             <TableBody>
-              {filteredStudents.map((student) => {
+              {filteredStudents.map((student, index) => {
                 const id = student._id || student.id;
                 // Safely handle optional chaining for display
                 const displayName = student.name || "Unknown";
@@ -663,22 +663,32 @@ const StudentList = ({
                 
                 return (
                   <TableRow key={id}>
-                    {/* Student name + chip */}
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 text-white flex items-center justify-center text-sm font-semibold">
-                          {displayName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {displayName}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
+      {/* Student name column */}
+              <TableCell>
+                <div className="flex items-center gap-3">
+                  
+                  {/* --- OLD CODE (Blue Circle) --- */}
+                  {/* <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 text-white flex items-center justify-center text-sm font-semibold">
+                    {displayName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </div> 
+                  */}
+
+                  {/* --- NEW CODE (Number Only) --- */}
+                  <span className="text-gray-500 font-bold text-lg min-w-[24px]">
+                    {index + 1}.
+                  </span>
+                  {/* ----------------------------- */}
+
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {displayName}
+                    </p>
+                  </div>
+                </div>
+              </TableCell>
 
                     {/* Age */}
                     <TableCell>{displayAge || "-"}</TableCell>
