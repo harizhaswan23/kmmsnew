@@ -4,23 +4,31 @@ const bcrypt = require("bcryptjs");
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
+
     email: {
       type: String,
       required: true,
       unique: true,
       lowercase: true,
     },
+
     password: { type: String, required: true },
+
     role: {
       type: String,
       enum: ["admin", "teacher", "parent"],
       required: true,
     },
+
+    // Parent Link
     childStudentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
     },
+
     profileImage: { type: String, default: "" },
+
+    // Teacher Fields
     phone: String,
     qualification: { type: String, enum: ["Diploma", "Degree"] },
     hireDate: Date,
@@ -40,7 +48,7 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
-  // If password starts with $2, it's likely already hashed. Skip.
+  // Safety: If password looks like it's already hashed, skip
   if (this.password && this.password.startsWith("$2")) {
     return next();
   }

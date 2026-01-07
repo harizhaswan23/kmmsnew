@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Edit, Trash2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -21,10 +21,15 @@ import {
   TableRow,
 } from "../ui/table";
 
+// 1. Import the class API
+import { getClasses } from "../../api/classes"; 
+
 const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
-  const [viewMode, setViewMode] = useState("current"); // 'current' or 'history'
+  
+  // 2. State for storing classes fetched from DB
+  const [availableClasses, setAvailableClasses] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -38,6 +43,19 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
     taxNo: "",
     status: "Active",
   });
+
+  // 3. Fetch classes on component mount
+  useEffect(() => {
+    async function fetchClasses() {
+      try {
+        const data = await getClasses();
+        setAvailableClasses(data || []);
+      } catch (error) {
+        console.error("Failed to load classes:", error);
+      }
+    }
+    fetchClasses();
+  }, []);
 
   const resetForm = () => {
     setFormData({
@@ -84,12 +102,6 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
     resetForm();
   };
 
-  // Filter Logic: Current = Active, History = Inactive/Resigned
-  const filteredTeachers = teachers.filter((teacher) => {
-    const isActive = teacher.status === "Active";
-    return viewMode === "current" ? isActive : !isActive;
-  });
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -117,6 +129,7 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-4 py-2">
+              
               {/* Full Name */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">Full Name</label>
@@ -132,7 +145,7 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
 
               {/* Email */}
               <div className="space-y-1">
-                <label className="text-sm font-medium text-gray-700">Email</label>
+                <label className="text-sm font-medium text-gray-700">Email Address</label>
                 <Input
                   type="email"
                   placeholder="e.g. sarah@example.com"
@@ -143,6 +156,22 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
                   required
                 />
               </div>
+
+                  {/* Password - Only for NEW teachers */}
+              {!editingTeacher && (
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">Password</label>
+                  <Input
+                    type="password"
+                    placeholder="Set login password"
+                    value={formData.password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+              )}
 
               {/* Phone */}
               <div className="space-y-1">
@@ -157,27 +186,13 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
                 />
               </div>
 
-              {/* Password (only for new) */}
-              {!editingTeacher && (
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Password</label>
-                  <Input
-                    type="password"
-                    placeholder="Enter password"
-                    value={formData.password}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-              )}
+              
 
-              {/* Class Assigned */}
+              {/* Class Assigned - CHANGED TO DROPDOWN */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">Class Assigned</label>
-                <Input
-                  placeholder="e.g. Nursery A"
+                <select
+                  className="border rounded-lg p-2 w-full text-sm"
                   value={formData.classAssigned}
                   onChange={(e) =>
                     setFormData({
@@ -186,7 +201,18 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
                     })
                   }
                   required
-                />
+                >
+                  <option value="">Select Class</option>
+                  {availableClasses.length > 0 ? (
+                    availableClasses.map((cls) => (
+                      <option key={cls._id} value={cls.className}>
+                        {cls.className}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>No classes found in database</option>
+                  )}
+                </select>
               </div>
 
               {/* Qualification */}
@@ -223,7 +249,7 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
                 />
               </div>
 
-              {/* EPF No */}
+              {/* EPF Number */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">EPF Number</label>
                 <Input
@@ -235,7 +261,7 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
                 />
               </div>
 
-              {/* Tax No */}
+              {/* Tax Number */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">Tax Number</label>
                 <Input
@@ -276,39 +302,16 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
         </Dialog>
       </div>
 
-      {/* Table Section */}
+      {/* Table */}
       <Card>
-        <CardHeader className="pb-2">
-          {/* Tabs for Current vs History */}
-          <div className="flex items-center gap-6 border-b">
-            <button
-              onClick={() => setViewMode("current")}
-              className={`pb-3 text-sm font-medium transition-colors ${
-                viewMode === "current"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Current Teachers
-            </button>
-            <button
-              onClick={() => setViewMode("history")}
-              className={`pb-3 text-sm font-medium transition-colors ${
-                viewMode === "history"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              History
-            </button>
-          </div>
+        <CardHeader>
+          <CardTitle>All Teachers ({teachers.length})</CardTitle>
         </CardHeader>
 
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[50px]">No.</TableHead>
                 <TableHead>Teacher</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
@@ -323,84 +326,77 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
             </TableHeader>
 
             <TableBody>
-              {filteredTeachers.length > 0 ? (
-                filteredTeachers.map((teacher, index) => (
-                  <TableRow key={teacher._id || teacher.id}>
-                    {/* Index Number */}
-                    <TableCell className="font-medium text-gray-500">
-                      {index + 1}.
-                    </TableCell>
+              {teachers.map((teacher) => (
+                <TableRow key={teacher._id || teacher.id}>
+                  <TableCell className="font-medium">{teacher.name}</TableCell>
+                  <TableCell>{teacher.email}</TableCell>
+                  <TableCell>{teacher.phone || "-"}</TableCell>
+                  <TableCell>{teacher.classAssigned || "-"}</TableCell>
+                  <TableCell>{teacher.qualification || "-"}</TableCell>
+                  <TableCell>
+                    {teacher.hireDate
+                      ? new Date(teacher.hireDate).toLocaleDateString()
+                      : "-"}
+                  </TableCell>
+                  <TableCell>{teacher.epfNo || "-"}</TableCell>
+                  <TableCell>{teacher.taxNo || "-"}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        teacher.status === "Active"
+                          ? "default"
+                          : "secondary"
+                      }
+                      className={
+                        teacher.status === "Active"
+                          ? "bg-green-100 text-green-700 hover:bg-green-100"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-100"
+                      }
+                    >
+                      {teacher.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingTeacher(teacher);
+                        setFormData({
+                          name: teacher.name || "",
+                          email: teacher.email || "",
+                          phone: teacher.phone || "",
+                          password: "",
+                          classAssigned: teacher.classAssigned || "",
+                          qualification: teacher.qualification || "",
+                          hireDate: teacher.hireDate
+                            ? teacher.hireDate.split("T")[0]
+                            : "",
+                          epfNo: teacher.epfNo || "",
+                          taxNo: teacher.taxNo || "",
+                          status: teacher.status || "Active",
+                        });
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 text-white-500" />
+                    </Button>
 
-                    <TableCell className="font-medium text-gray-900">
-                      {teacher.name}
-                    </TableCell>
-                    <TableCell>{teacher.email}</TableCell>
-                    <TableCell>{teacher.phone || "-"}</TableCell>
-                    <TableCell>{teacher.classAssigned || "-"}</TableCell>
-                    <TableCell>{teacher.qualification || "-"}</TableCell>
-                    <TableCell>
-                      {teacher.hireDate
-                        ? new Date(teacher.hireDate).toLocaleDateString()
-                        : "-"}
-                    </TableCell>
-                    <TableCell>{teacher.epfNo || "-"}</TableCell>
-                    <TableCell>{teacher.taxNo || "-"}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          teacher.status === "Active"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className={
-                          teacher.status === "Active"
-                            ? "bg-green-100 text-green-700 hover:bg-green-100"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-100"
-                        }
-                      >
-                        {teacher.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingTeacher(teacher);
-                          setFormData({
-                            name: teacher.name || "",
-                            email: teacher.email || "",
-                            phone: teacher.phone || "",
-                            password: "",
-                            classAssigned: teacher.classAssigned || "",
-                            qualification: teacher.qualification || "",
-                            hireDate: teacher.hireDate
-                              ? teacher.hireDate.split("T")[0]
-                              : "",
-                            epfNo: teacher.epfNo || "",
-                            taxNo: teacher.taxNo || "",
-                            status: teacher.status || "Active",
-                          });
-                          setIsDialogOpen(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4 text-blue-500" />
-                      </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(teacher._id || teacher.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-white-500" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(teacher._id || teacher.id)}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
+              {teachers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center text-gray-500 h-24">
-                    No {viewMode} teachers found.
+                  <TableCell colSpan={10} className="text-center text-gray-500 h-24">
+                    No teachers found.
                   </TableCell>
                 </TableRow>
               )}

@@ -4,8 +4,6 @@ import {
   BookOpen,
   CheckCircle,
   DollarSign,
-  TrendingUp,
-  TrendingDown,
 } from "lucide-react";
 
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
@@ -92,8 +90,6 @@ export default function AdminDashboard({ setActiveTab }) {
       title: "Total Students",
       value: totalStudents,
       icon: Users,
-      trend: "up",
-      change: "+12%",
       color: "from-blue-400 to-blue-600",
       onClick: () => setActiveTab("users"),
     },
@@ -101,8 +97,6 @@ export default function AdminDashboard({ setActiveTab }) {
       title: "Active Teachers",
       value: activeTeachers,
       icon: BookOpen,
-      trend: "up",
-      change: "+5%",
       color: "from-green-400 to-green-600",
       onClick: () => setActiveTab("teachers"),
     },
@@ -110,8 +104,6 @@ export default function AdminDashboard({ setActiveTab }) {
       title: "Today’s Attendance",
       value: `${attendanceToday.present}/${attendanceToday.total}`,
       icon: CheckCircle,
-      trend: "down",
-      change: "-2%",
       color: "from-purple-400 to-purple-600",
       onClick: () => setActiveTab("attendance"),
     },
@@ -119,8 +111,6 @@ export default function AdminDashboard({ setActiveTab }) {
       title: "Revenue (This Month)",
       value: `RM ${revenue}`,
       icon: DollarSign,
-      trend: "up",
-      change: "+8%",
       color: "from-yellow-400 to-yellow-600",
       onClick: () => setActiveTab("payments"),
     },
@@ -139,8 +129,7 @@ export default function AdminDashboard({ setActiveTab }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => {
           const Icon = stat.icon;
-          const TrendIcon =
-            stat.trend === "up" ? TrendingUp : TrendingDown;
+          
 
           return (
             <Card
@@ -155,13 +144,6 @@ export default function AdminDashboard({ setActiveTab }) {
                     <h3 className="text-gray-900 text-xl mb-1">{stat.value}</h3>
 
                     <div className="flex items-center gap-1 text-sm">
-                      <TrendIcon
-                        className={`w-4 h-4 ${
-                          stat.trend === "up"
-                            ? "text-green-500"
-                            : "text-orange-500"
-                        }`}
-                      />
                       <span className="text-gray-600">{stat.change}</span>
                     </div>
                   </div>
@@ -188,34 +170,34 @@ export default function AdminDashboard({ setActiveTab }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivities.map((item) => (
+          {/*    {recentActivities.map((item) => (
                 <div
                   key={item.id}
                   className="flex items-start gap-4 pb-4 border-b border-gray-100 last:border-0"
-                >
-                  {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                > */}
+                   {/* Avatar */}
+             {/*     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
                     <span className="text-purple-600 font-medium">
                       {item.teacher[0]}
                     </span>
-                  </div>
-
+                  </div>  
+            */}
                   {/* Text Info */}
-                  <div className="flex-1 min-w-0">
+            {/*      <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900">
                       {item.teacher}
                       <span className="text-gray-600"> {item.action}</span>
                     </p>
                     <p className="text-xs text-gray-500 mt-1">{item.time}</p>
                   </div>
-
+               */} 
                   {/* Type Badge */}
-                  <Badge variant="outline" className="capitalize">
+              {/*      <Badge variant="outline" className="capitalize">
                     {item.type}
                   </Badge>
-                </div>
-              ))}
-            </div>
+                </div> 
+              ))} */}
+            </div> 
           </CardContent>
         </Card>
 
@@ -226,7 +208,7 @@ export default function AdminDashboard({ setActiveTab }) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {pendingLeaves.map((leave) => (
+              {/* {pendingLeaves.map((leave) => (
                 <div
                   key={leave.id}
                   className="p-4 bg-orange-50 border border-orange-100 rounded-lg"
@@ -254,7 +236,7 @@ export default function AdminDashboard({ setActiveTab }) {
                     </button>
                   </div>
                 </div>
-              ))}
+              ))} */}
             </div>
           </CardContent>
         </Card>
