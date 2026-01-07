@@ -98,7 +98,7 @@ export default function AdminAttendance() {
             type="date" className="border rounded-md p-2 text-sm"
             value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} 
           />
-          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 ml-2">
+          <Button onClick={handleSave} className="bg-pink-600 hover:bg-pink-700 ml-2">
             <Save className="w-4 h-4 mr-2"/> Save
           </Button>
         </div>

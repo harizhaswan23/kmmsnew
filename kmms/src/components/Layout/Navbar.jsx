@@ -22,7 +22,7 @@ const Navbar = ({ user, onMenuClick, onLogout }) => {
             <p className="text-xs uppercase tracking-wide text-gray-400">
               {user.role}
             </p>
-            <h1 className="text-lg md:text-xl font-bold text-indigo-700">
+            <h1 className="text-lg md:text-xl font-bold text-pink-600">
               Kindergarten Management System
             </h1>
           </div>

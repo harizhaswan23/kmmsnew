@@ -115,7 +115,7 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700" >
               <Plus className="w-4 h-4" />
               Add Teacher
             </Button>

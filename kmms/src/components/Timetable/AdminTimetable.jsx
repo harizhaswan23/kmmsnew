@@ -242,8 +242,7 @@ export default function AdminTimetable() {
               </div>
 
               {/* Submit Button */}
-              <Button type="submit" size="sm" className="w-full bg-slate-800 hover:bg-slate-700 mt-2">
-                <Plus className="w-4 h-4 mr-2" /> Add Slot
+              <Button type="submit" size="sm" className="w-full bg-pink-600 hover:bg-pink-700 mt-2"><Plus className="w-4 h-4 mr-2" /> Add Slot
               </Button>
             </form>
           </CardContent>

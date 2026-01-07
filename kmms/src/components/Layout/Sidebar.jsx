@@ -73,7 +73,7 @@ const Sidebar = ({
   const content = (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-indigo-700">KMMS</h2>
+        <h2 className="text-2xl font-bold text-pink-600">KMMS</h2>
         {/* Close button for mobile */}
         <button
           className="md:hidden p-2 rounded-lg hover:bg-gray-100"
@@ -92,7 +92,7 @@ const Sidebar = ({
               onClick={() => setActiveTab(id)}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-sm font-medium
                 ${isActive
-                  ? "bg-indigo-600 text-white shadow-sm"
+                  ? "bg-pink-600 text-white shadow-sm"
                   : "text-gray-700 hover:bg-gray-100"
                 }`}
             >

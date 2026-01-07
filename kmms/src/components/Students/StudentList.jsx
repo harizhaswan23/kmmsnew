@@ -215,7 +215,7 @@ const StudentList = ({
           {/* Add Class Button */}
           <Dialog open={isAddClassDialogOpen} onOpenChange={setIsAddClassDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2 bg-green-600 hover:bg-green-700">
+              <Button className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700">
                 <Plus className="w-4 h-4" />
                 Add Class
               </Button>
@@ -291,7 +291,7 @@ const StudentList = ({
           {/* Add Student Button */}
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700">
+              <Button className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700">
                 <Plus className="w-4 h-4" />
                 Add Student
               </Button>
