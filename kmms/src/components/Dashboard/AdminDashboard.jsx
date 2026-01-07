@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
-import { Badge } from "../ui/badge";
+
 
 import { getStudents } from "../../api/students";
 import { getTeachers } from "../../api/teachers";
@@ -65,22 +65,7 @@ export default function AdminDashboard({ setActiveTab }) {
     }
   }
 
-  // ---------------------------------
-  // FIGMA SAMPLE DATA (STATIC FOR NOW)
-  // ---------------------------------
-  const recentActivities = [
-    { id: 1, teacher: "Sarah Johnson", action: "Marked attendance", time: "10 minutes ago", type: "attendance" },
-    { id: 2, teacher: "Michael Chen", action: "Applied for leave", time: "1 hour ago", type: "leave" },
-    { id: 3, teacher: "Emily Davis", action: "Updated timetable", time: "2 hours ago", type: "timetable" },
-    { id: 4, teacher: "David Wilson", action: "Submitted report", time: "3 hours ago", type: "report" },
-    { id: 5, teacher: "Lisa Anderson", action: "Marked attendance", time: "4 hours ago", type: "attendance" },
-  ];
 
-  const pendingLeaves = [
-    { id: 1, teacher: "Sarah Johnson", type: "Sick Leave", dates: "Jan 15-17", status: "pending" },
-    { id: 2, teacher: "Michael Chen", type: "Personal Leave", dates: "Jan 20-21", status: "pending" },
-    { id: 3, teacher: "Emily Davis", type: "Annual Leave", dates: "Feb 1-5", status: "pending" },
-  ];
 
   // -----------------------
   // STATS BOX DESIGN

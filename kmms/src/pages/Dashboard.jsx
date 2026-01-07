@@ -8,7 +8,11 @@ import AdminTimetable from "../components/Timetable/AdminTimetable";
 import Students from "./Students";
 // import StudentList from "../components/Students/StudentList";
 //import TeacherList from "../components/Teachers/TeacherList";
-import AttendanceManagement from "../components/Attendance/AttendanceManagement";
+
+// 1. IMPORT BOTH ATTENDANCE COMPONENTS
+import AdminAttendance from "../components/Attendance/AdminAttendance";
+import TeacherAttendance from "../components/Attendance/TeacherAttendance";
+
 import ActivitiesTracking from "../components/Activities/ActivitiesTracking";
 import LeaveManagement from "../components/Leave/LeaveManagement";
 import LeaveRequest from "../components/Leave/LeaveRequest";
@@ -63,10 +67,12 @@ const Dashboard = ({ user, onLogout }) => {
       if (activeTab === "timetables")
         return <AdminTimetable />;
 
+      // ✅ ADMIN SEES ADMIN ATTENDANCE (All Classes)
+      if (activeTab === "attendance")
+        return <AdminAttendance />;
+
       if (activeTab === "settings")
         return <Settings user={user} />;
-
-
 
       return <AdminDashboard setActiveTab={setActiveTab} />;
     }
@@ -82,8 +88,9 @@ const Dashboard = ({ user, onLogout }) => {
       if (activeTab === "timetables")
         return <TeacherTimetable />;
 
+      // ✅ TEACHER SEES TEACHER ATTENDANCE (Assigned Class Only)
       if (activeTab === "attendance")
-        return <AttendanceManagement teacherId={user.id} />;
+        return <TeacherAttendance user={user} />;
 
       if (activeTab === "activities")
         return <ActivitiesTracking teacherId={user.id} />;

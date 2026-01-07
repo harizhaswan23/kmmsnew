@@ -1,54 +1,55 @@
 const Attendance = require("../models/Attendance");
+const Student = require("../models/Student");
 
-// GET attendance for a specific date or student
-exports.getAttendance = async (req, res) => {
+// GET Attendance for a specific Date and Class
+exports.getAttendance = async (req, res, next) => {
   try {
-    const { date, studentId } = req.query;
+    const { date, classId } = req.query;
 
-    const query = {};
-    if (date) query.date = date;
-    if (studentId) query.studentId = studentId;
+    if (!date || !classId) {
+      return res.status(400).json({ message: "Date and Class ID are required" });
+    }
 
-    const records = await Attendance.find(query);
-    res.json(records);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching attendance" });
+    // 1. Try to find an existing attendance record
+    let attendance = await Attendance.findOne({ date, classId }).populate("records.studentId", "name");
+
+    // 2. If NO record exists, we return a "template" based on current students
+    if (!attendance) {
+      const students = await Student.find({ classId, status: "active" }).select("name _id");
+      
+      // Return a temporary structure (not saved to DB yet)
+      return res.json({
+        date,
+        classId,
+        records: students.map(s => ({
+          studentId: s, // Populate structure
+          status: "Present",
+          reason: ""
+        })),
+        isNew: true // Flag for frontend
+      });
+    }
+
+    res.json(attendance);
+  } catch (err) {
+    next(err);
   }
 };
 
-// MARK attendance
-exports.markAttendance = async (req, res) => {
+// SAVE / UPDATE Attendance
+exports.saveAttendance = async (req, res, next) => {
   try {
-    const { date, studentId, status, reason, time } = req.body;
+    const { date, classId, records } = req.body;
 
-    if (!date || !studentId || !status) {
-      return res.status(400).json({ message: "Missing fields" });
-    }
+    // Upsert: Update if exists, Insert if new
+    const attendance = await Attendance.findOneAndUpdate(
+      { date, classId },
+      { records },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
 
-    // update if already exists
-    const existing = await Attendance.findOne({ date, studentId });
-
-    if (existing) {
-      existing.status = status;
-      existing.time = time || existing.time;
-      existing.reason = reason || existing.reason;
-      await existing.save();
-      return res.json(existing);
-    }
-
-    // create new
-    const record = new Attendance({
-      date,
-      studentId,
-      status,
-      time,
-      reason
-    });
-
-    const saved = await record.save();
-    res.status(201).json(saved);
-
-  } catch (error) {
-    res.status(500).json({ message: "Error marking attendance" });
+    res.json(attendance);
+  } catch (err) {
+    next(err);
   }
 };

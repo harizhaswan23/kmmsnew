@@ -7,45 +7,35 @@ const timetableSchema = new mongoose.Schema(
       ref: "Class",
       required: true,
     },
-
+    teacherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // or "Teacher" depending on your referencing
+    },
+    // Standardize on "day" to match Frontend
     day: {
+      type: String, 
+      required: true,
+      enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    },
+    startTime: {
       type: String,
-      enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
       required: true,
     },
-
+    endTime: {
+      type: String,
+      required: true,
+    },
     subject: {
       type: String,
       required: true,
     },
-
-    startTime: {
-      type: String, // "08:00"
-      required: true,
-    },
-
-    endTime: {
-      type: String, // "09:00"
-      required: true,
-    },
-
-    teacherId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-
-    color: {
-      type: String, // hex color
-      default: "#60a5fa",
-    },
-
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
   },
   { timestamps: true }
 );
+
+// --- INDEXING EXPLAINED ---
+// We want to prevent DOUBLE BOOKING (Two classes at the same time for the same group).
+// So, Class + Day + StartTime must be unique.
+timetableSchema.index({ classId: 1, day: 1, startTime: 1 }, { unique: true });
 
 module.exports = mongoose.model("Timetable", timetableSchema);
