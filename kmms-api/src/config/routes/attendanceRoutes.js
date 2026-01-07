@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { getAttendance, saveAttendance } = require("../controllers/attendanceController");
+const { getAttendance, saveAttendance, getMonthlyStats } = require("../controllers/attendanceController");
 const { protect } = require("../middleware/authMiddleware");
 
 router.get("/", protect, getAttendance);
 router.post("/", protect, saveAttendance);
-
+router.get("/stats", protect, getMonthlyStats);
 module.exports = router;

@@ -1,106 +1,201 @@
 import React, { useState } from "react";
-import LoginForm from "./LoginForm";
-import { loginUser } from "../api/auth";
+import http from "../api/http";
+import { 
+  Loader2, 
+  User, 
+  Lock, 
+  ChevronLeft, 
+  School, 
+  GraduationCap, 
+  Users 
+} from "lucide-react";
 
-function Login({ onLogin }) {
-  const [selectedRole, setSelectedRole] = useState(null);
+// UI Components (Internal for simplicity)
+const InputField = ({ icon: Icon, type, placeholder, value, onChange }) => (
+  <div className="relative mb-4">
+    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <Icon className="h-5 w-5 text-gray-400" />
+    </div>
+    <input
+      type={type}
+      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 hover:bg-white"
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      required
+    />
+  </div>
+);
+
+const RoleCard = ({ role, icon: Icon, title, description, onClick }) => (
+  <button
+    onClick={() => onClick(role)}
+    className="w-full flex items-center p-4 mb-3 bg-white border border-gray-100 rounded-xl hover:shadow-lg hover:border-blue-100 hover:bg-blue-50 transition-all group text-left"
+  >
+    <div className="h-12 w-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+      <Icon className="h-6 w-6" />
+    </div>
+    <div className="ml-4">
+      <h3 className="text-gray-900 font-semibold">{title}</h3>
+      <p className="text-sm text-gray-500">{description}</p>
+    </div>
+  </button>
+);
+
+const Login = ({ onLogin }) => {
+  const [role, setRole] = useState(null); // 'admin' | 'teacher' | 'parent'
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // MAIN LOGIN FUNCTION
-  async function handleLogin({ email, password, role, setError }) {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
     try {
-      setLoading(true);
-
-      const data = await loginUser({ email, password });
-      const backendRole = data.role.toLowerCase();
-
-      // New role logic:
-      // Admin can log in using Teacher button.
-      const allowedRoles = {
-        Teacher: ["teacher", "admin"],
-        Parent: ["parent"],
-      };
-
-      if (!allowedRoles[role].includes(backendRole)) {
-        setError(
-          `Role mismatch! You selected ${role}, but logged in as ${data.role}`
-        );
-        return;
-      }
-
-      // Store session
-      localStorage.setItem("kmms-token", data.token);
-      localStorage.setItem("kmms-user", JSON.stringify(data));
-
-      onLogin(data);
+      // Use your existing API structure
+      const res = await http.post("/auth/login", { email, password, role });
+      onLogin(res.data);
     } catch (err) {
-      setError("Invalid email or password");
       console.error(err);
+      setError(err.response?.data?.message || "Login failed. Please check credentials.");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  // If a role is selected → show login form screen
-  if (selectedRole) {
-    return (
-      <LoginForm
-        role={selectedRole}
-        onBack={() => setSelectedRole(null)}
-        onSubmit={handleLogin}
-        loading={loading}
-      />
-    );
-  }
-
-  // MAIN SCREEN → Role Selection + Branding Panel
   return (
-    <div className="min-h-screen grid md:grid-cols-2 bg-gray-100">
+    <div className="min-h-screen flex bg-white">
+      {/* LEFT SIDE - BRANDING */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-900 text-white flex-col justify-between p-12 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M0 100 C 20 0 50 0 100 100 Z" fill="white" />
+          </svg>
+        </div>
 
-      {/* LEFT PANEL (Branding) */}
-      <div className="hidden md:flex flex-col justify-center items-center text-white 
-                      bg-gradient-to-br from-pink-500 via-purple-500 to-orange-400 p-12">
-        <div className="text-center max-w-md">
-          <div className="text-6xl mb-6">🎓</div>
-          <h1 className="text-4xl font-bold mb-4">SmartKindy</h1>
-          <h2 className="text-3xl font-semibold mb-4">
-            Kindergarten Management System
-          </h2>
-          <p className="text-lg opacity-90">
-            Streamline your kindergarten operations with our comprehensive
-            management platform.
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 text-2xl font-bold tracking-wider">
+            <School className="w-8 h-8" />
+            <span>KMMS</span>
+          </div>
+        </div>
+
+        <div className="relative z-10 max-w-md">
+          <h1 className="text-5xl font-bold mb-6 leading-tight">
+            SmartKindy.
+          </h1>
+          <p className="text-blue-100 text-lg leading-relaxed">
+            Streamline kindergarten management in one unified platform.
           </p>
         </div>
-      </div>
 
-      {/* RIGHT PANEL — Role Selection */}
-      <div className="flex items-center justify-center p-10">
-        <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md text-center">
-
-          <h1 className="text-4xl font-bold text-indigo-700 mb-2">Login</h1>
-          <p className="text-gray-600 mb-8">Please choose your role below:</p>
-
-          {/* TEACHER BUTTON */}
-          <button
-            onClick={() => setSelectedRole("Teacher")}
-            className="w-full p-4 bg-green-600 text-white rounded-lg mb-4 hover:bg-green-700 transition"
-          >
-            📘 Login as Teacher
-          </button>
-
-          {/* PARENT BUTTON */}
-          <button
-            onClick={() => setSelectedRole("Parent")}
-            className="w-full p-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-          >
-            👥 Login as Parent
-          </button>
-
+        <div className="relative z-10 text-sm text-blue-200">
+          © {new Date().getFullYear()} Kindergarten Management System
         </div>
       </div>
 
+      {/* RIGHT SIDE - LOGIN FORM */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
+        <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
+          
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">
+              {!role ? "Welcome Back" : `${role.charAt(0).toUpperCase() + role.slice(1)} Login`}
+            </h2>
+            <p className="text-gray-500 mt-2">
+              {!role ? "Please select your login type to continue" : "Enter your credentials to access your dashboard"}
+            </p>
+          </div>
+
+          {/* Role Selection View */}
+          {!role ? (
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <RoleCard 
+                role="admin" 
+                icon={School} 
+                title="Admin Portal" 
+                description="System management & oversight" 
+                onClick={setRole} 
+              />
+              <RoleCard 
+                role="teacher" 
+                icon={GraduationCap} 
+                title="Teacher Portal" 
+                description="Classroom & student management" 
+                onClick={setRole} 
+              />
+              <RoleCard 
+                role="parent" 
+                icon={Users} 
+                title="Parent Portal" 
+                description="View child's progress & updates" 
+                onClick={setRole} 
+              />
+            </div>
+          ) : (
+            /* Login Form View */
+            <form onSubmit={handleSubmit} className="animate-in fade-in slide-in-from-right-8 duration-300">
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r">
+                  {error}
+                </div>
+              )}
+
+              <InputField 
+                icon={User} 
+                type="email" 
+                placeholder="Email Address" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+              />
+              
+              <InputField 
+                icon={Lock} 
+                type="password" 
+                placeholder="Password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+              />
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-blue-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setRole(null);
+                  setError("");
+                  setEmail("");
+                  setPassword("");
+                }}
+                className="w-full mt-4 text-gray-500 hover:text-gray-800 text-sm font-medium flex items-center justify-center gap-1 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back to Role Selection
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
     </div>
   );
-}
+};
 
 export default Login;

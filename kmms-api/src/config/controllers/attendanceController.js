@@ -53,3 +53,55 @@ exports.saveAttendance = async (req, res, next) => {
     next(err);
   }
 };
+
+
+
+// GET Monthly Stats for a Class
+exports.getMonthlyStats = async (req, res, next) => {
+  try {
+    const { classId, month } = req.query; // month format: "YYYY-MM"
+
+    if (!classId || !month) {
+      return res.status(400).json({ message: "Class ID and Month are required" });
+    }
+
+    // Find all attendance documents for this class that start with "YYYY-MM"
+    // Since date is stored as "YYYY-MM-DD", we can use Regex
+    const attendanceList = await Attendance.find({
+      classId: classId,
+      date: { $regex: `^${month}` } // Starts with "2026-01"
+    });
+
+    let totalPresent = 0;
+    let totalAbsent = 0;
+    let totalRecords = 0;
+
+    // Loop through every day found
+    attendanceList.forEach((day) => {
+      day.records.forEach((student) => {
+        totalRecords++;
+        if (student.status === "Present") {
+          totalPresent++;
+        } else {
+          totalAbsent++;
+        }
+      });
+    });
+
+    // Calculate Percentage
+    const percentage = totalRecords === 0 ? 0 : Math.round((totalPresent / totalRecords) * 100);
+
+    res.json({
+      month,
+      classId,
+      totalDays: attendanceList.length,
+      totalRecords,
+      totalPresent,
+      totalAbsent,
+      percentage
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
