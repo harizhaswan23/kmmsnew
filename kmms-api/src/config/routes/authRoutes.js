@@ -1,12 +1,20 @@
 const express = require("express");
 const router = express.Router();
-// Import the controller functions
-const { registerUser, loginUser, getMe } = require("../controllers/authController"); 
 const { protect } = require("../middleware/authMiddleware");
 
-// Use the controller functions
+// MERGE ALL IMPORTS INTO ONE LINE HERE:
+const { 
+  registerUser, 
+  loginUser, 
+  getMe, 
+  updatePassword 
+} = require("../controllers/authController");
+
 router.post("/register", registerUser);
-router.post("/login", loginUser); // Points to authController.js
+router.post("/login", loginUser);
 router.get("/me", protect, getMe);
+
+// Update Password Route
+router.put("/update-password", protect, updatePassword);
 
 module.exports = router;

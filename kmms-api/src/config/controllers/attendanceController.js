@@ -10,23 +10,46 @@ exports.getAttendance = async (req, res, next) => {
       return res.status(400).json({ message: "Date and Class ID are required" });
     }
 
-    // 1. Try to find an existing attendance record
-    let attendance = await Attendance.findOne({ date, classId }).populate("records.studentId", "name");
+    // 1. Fetch ALL currently active students for this class
+    const currentStudents = await Student.find({ classId, status: "active" }).select("name _id status");
 
-    // 2. If NO record exists, we return a "template" based on current students
+    // 2. Try to find an existing attendance record
+    let attendance = await Attendance.findOne({ date, classId })
+      .populate("records.studentId", "name status");
+
+    // 3. If NO record exists, return fresh template
     if (!attendance) {
-      const students = await Student.find({ classId, status: "active" }).select("name _id");
-      
-      // Return a temporary structure (not saved to DB yet)
       return res.json({
         date,
         classId,
-        records: students.map(s => ({
-          studentId: s, // Populate structure
+        records: currentStudents.map(s => ({
+          studentId: s, 
           status: "Present",
           reason: ""
         })),
-        isNew: true // Flag for frontend
+        isNew: true 
+      });
+    }
+
+    // 4. If record EXISTS, check for missing students (e.g. new registrations)
+    // Get list of Student IDs that are already in the attendance record
+    const recordedIds = attendance.records.map(r => 
+      r.studentId ? r.studentId._id.toString() : null
+    );
+
+    // Find active students who are NOT in the record
+    const missingStudents = currentStudents.filter(s => 
+      !recordedIds.includes(s._id.toString())
+    );
+
+    // Add missing students to the record (in memory only, User must click Save to persist)
+    if (missingStudents.length > 0) {
+      missingStudents.forEach(s => {
+        attendance.records.push({
+          studentId: s, // populated object
+          status: "Present", // Default status
+          reason: ""
+        });
       });
     }
 
@@ -36,12 +59,11 @@ exports.getAttendance = async (req, res, next) => {
   }
 };
 
-// SAVE / UPDATE Attendance
+// ... (Keep saveAttendance and getMonthlyStats exactly as they were) ...
 exports.saveAttendance = async (req, res, next) => {
   try {
     const { date, classId, records } = req.body;
 
-    // Upsert: Update if exists, Insert if new
     const attendance = await Attendance.findOneAndUpdate(
       { date, classId },
       { records },
@@ -54,29 +76,23 @@ exports.saveAttendance = async (req, res, next) => {
   }
 };
 
-
-
-// GET Monthly Stats for a Class
 exports.getMonthlyStats = async (req, res, next) => {
   try {
-    const { classId, month } = req.query; // month format: "YYYY-MM"
+    const { classId, month } = req.query; 
 
     if (!classId || !month) {
       return res.status(400).json({ message: "Class ID and Month are required" });
     }
 
-    // Find all attendance documents for this class that start with "YYYY-MM"
-    // Since date is stored as "YYYY-MM-DD", we can use Regex
     const attendanceList = await Attendance.find({
       classId: classId,
-      date: { $regex: `^${month}` } // Starts with "2026-01"
+      date: { $regex: `^${month}` } 
     });
 
     let totalPresent = 0;
     let totalAbsent = 0;
     let totalRecords = 0;
 
-    // Loop through every day found
     attendanceList.forEach((day) => {
       day.records.forEach((student) => {
         totalRecords++;
@@ -88,7 +104,6 @@ exports.getMonthlyStats = async (req, res, next) => {
       });
     });
 
-    // Calculate Percentage
     const percentage = totalRecords === 0 ? 0 : Math.round((totalPresent / totalRecords) * 100);
 
     res.json({

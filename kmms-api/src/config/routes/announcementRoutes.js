@@ -4,12 +4,26 @@ const router = express.Router();
 const { protect, authorize } = require("../middleware/authMiddleware");
 const Announcement = require("../models/Announcement");
 
-// GET all announcements
+// GET announcements (Filtered by Role)
 router.get("/", protect, async (req, res) => {
-  const list = await Announcement.find()
-    .populate("createdBy", "name role")
-    .sort({ createdAt: -1 });
-  res.json(list);
+  try {
+    let query = {};
+
+    // If NOT admin, restrict what they can see
+    if (req.user.role !== "admin") {
+      // Users see announcements for "all" OR their specific role
+      // Example: Teachers see "all" and "teacher"
+      query.targetRole = { $in: ["all", req.user.role] };
+    }
+
+    const list = await Announcement.find(query)
+      .populate("createdBy", "name role")
+      .sort({ createdAt: -1 });
+
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch announcements" });
+  }
 });
 
 // ADMIN: Create announcement

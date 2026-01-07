@@ -16,7 +16,7 @@ export default function TeacherAttendance({ user }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // 1. Find My Class based on user.classAssigned
+  // 1. Find My Class
   useEffect(() => {
     async function findMyClass() {
       if (!user.classAssigned) {
@@ -25,7 +25,6 @@ export default function TeacherAttendance({ user }) {
       }
       try {
         const allClasses = await getClasses();
-        // Find the class ID that matches the string name
         const found = allClasses.find(c => 
           c.className.toLowerCase().trim() === user.classAssigned.toLowerCase().trim()
         );
@@ -42,7 +41,7 @@ export default function TeacherAttendance({ user }) {
     findMyClass();
   }, [user]);
 
-  // 2. Load Attendance
+  // 2. Load Attendance (FIXED: Filter Active Only)
   useEffect(() => {
     if (!myClass || !selectedDate) return;
 
@@ -50,13 +49,23 @@ export default function TeacherAttendance({ user }) {
       setLoading(true);
       try {
         const data = await getAttendance(selectedDate, myClass._id);
-        const mappedRecords = data.records.map(r => ({
-           studentId: r.studentId._id || r.studentId, 
-           name: r.studentId.name || "Unknown",
-           status: r.status || "Present",
-           reason: r.reason || ""
-        }));
-        setAttendanceRecords(mappedRecords);
+        
+        const activeRecords = data.records
+          .map(r => {
+             const studentObj = r.studentId || {};
+             return {
+               studentId: studentObj._id || r.studentId, 
+               name: studentObj.name || "Unknown",
+               status: r.status || "Present",
+               reason: r.reason || "",
+               // Check status
+               accountStatus: studentObj.status || "active"
+             };
+          })
+          // FILTER
+          .filter(r => r.accountStatus.toLowerCase() === "active");
+
+        setAttendanceRecords(activeRecords);
       } catch (err) {
         setAttendanceRecords([]);
       } finally {
@@ -105,7 +114,6 @@ export default function TeacherAttendance({ user }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        {/* Title shows ONLY the assigned class */}
         <h2 className="text-2xl font-bold text-gray-900">
           Attendance: <span className="text-blue-600">{myClass.className}</span>
         </h2>
@@ -131,16 +139,14 @@ export default function TeacherAttendance({ user }) {
         </CardHeader>
         <CardContent>
           {loading ? <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto" /> : 
-            attendanceRecords.length === 0 ? <div className="text-center p-8 text-gray-500">No students found in your class.</div> : (
+            attendanceRecords.length === 0 ? <div className="text-center p-8 text-gray-500">No active students found in your class.</div> : (
             <div className="space-y-2">
-               {/* Header */}
                <div className="grid grid-cols-12 gap-4 bg-gray-50 p-2 rounded text-sm font-bold text-gray-600">
                  <div className="col-span-4">Name</div>
                  <div className="col-span-4 text-center">Status</div>
                  <div className="col-span-4">Reason</div>
                </div>
 
-               {/* List */}
                {attendanceRecords.map((r, i) => (
                 <div key={r.studentId} className={`grid grid-cols-12 gap-4 items-center p-3 border rounded ${r.status === "Absent" ? "bg-red-50 border-red-100" : "bg-white"}`}>
                   <div className="col-span-4 font-medium truncate">{r.name}</div>
@@ -156,6 +162,7 @@ export default function TeacherAttendance({ user }) {
                         <option value="Sick">Sick</option>
                         <option value="Family Matter">Family Matter</option>
                         <option value="Emergency">Emergency</option>
+                        <option value="MIA">MIA</option>
                       </select>
                     )}
                   </div>

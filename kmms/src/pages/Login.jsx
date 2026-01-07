@@ -7,25 +7,50 @@ import {
   ChevronLeft, 
   School, 
   GraduationCap, 
-  Users 
+  Users,
+  Eye,      // <--- Added
+  EyeOff    // <--- Added
 } from "lucide-react";
 
-// UI Components (Internal for simplicity)
-const InputField = ({ icon: Icon, type, placeholder, value, onChange }) => (
-  <div className="relative mb-4">
-    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-      <Icon className="h-5 w-5 text-gray-400" />
+// --- FIXED INPUT COMPONENT ---
+const InputField = ({ icon: Icon, type, placeholder, value, onChange }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === "password";
+
+  return (
+    <div className="relative mb-4">
+      {/* Left Icon (User/Lock) */}
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <Icon className="h-5 w-5 text-gray-400" />
+      </div>
+
+      <input
+        // If it's a password field, toggle between 'text' and 'password'
+        type={isPassword ? (showPassword ? "text" : "password") : type}
+        className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 hover:bg-white"
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        required
+      />
+
+      {/* Right Icon (Eye Toggle) - Only appears for password fields */}
+      {isPassword && (
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+        >
+          {showPassword ? (
+            <EyeOff className="h-5 w-5" />
+          ) : (
+            <Eye className="h-5 w-5" />
+          )}
+        </button>
+      )}
     </div>
-    <input
-      type={type}
-      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-gray-50 hover:bg-white"
-      placeholder={placeholder}
-      value={value}
-      onChange={onChange}
-      required
-    />
-  </div>
-);
+  );
+};
 
 const RoleCard = ({ role, icon: Icon, title, description, onClick }) => (
   <button
@@ -55,7 +80,6 @@ const Login = ({ onLogin }) => {
     setError("");
 
     try {
-      // Use your existing API structure
       const res = await http.post("/auth/login", { email, password, role });
       onLogin(res.data);
     } catch (err) {
@@ -70,7 +94,6 @@ const Login = ({ onLogin }) => {
     <div className="min-h-screen flex bg-white">
       {/* LEFT SIDE - BRANDING */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-900 text-white flex-col justify-between p-12 relative overflow-hidden">
-        {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <path d="M0 100 C 20 0 50 0 100 100 Z" fill="white" />
@@ -78,18 +101,18 @@ const Login = ({ onLogin }) => {
         </div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 text-2xl font-bold tracking-wider">
+          <div className="flex items-center gap-3 text-2xl font-bold">
             <School className="w-8 h-8" />
-            <span>KMMS</span>
+            <span>Kindergarten Management & Monitoring System</span>
           </div>
         </div>
 
         <div className="relative z-10 max-w-md">
           <h1 className="text-5xl font-bold mb-6 leading-tight">
-            SmartKindy.
+            SmartKindy
           </h1>
           <p className="text-blue-100 text-lg leading-relaxed">
-            Streamline kindergarten management in one unified platform.
+            Streamline your kindergarten management in one unified platform.
           </p>
         </div>
 
@@ -102,7 +125,6 @@ const Login = ({ onLogin }) => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
         <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
           
-          {/* Header */}
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900">
               {!role ? "Welcome Back" : `${role.charAt(0).toUpperCase() + role.slice(1)} Login`}
@@ -112,7 +134,6 @@ const Login = ({ onLogin }) => {
             </p>
           </div>
 
-          {/* Role Selection View */}
           {!role ? (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <RoleCard 
@@ -138,7 +159,6 @@ const Login = ({ onLogin }) => {
               />
             </div>
           ) : (
-            /* Login Form View */
             <form onSubmit={handleSubmit} className="animate-in fade-in slide-in-from-right-8 duration-300">
               {error && (
                 <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r">

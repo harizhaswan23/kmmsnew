@@ -8,9 +8,9 @@ import {
 
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 
-
 import { getStudents } from "../../api/students";
 import { getTeachers } from "../../api/teachers";
+import { getClasses } from "../../api/classes"; 
 import { getAttendance } from "../../api/attendance";
 
 import LiveDateTime from "../Common/LiveDateTime";
@@ -37,35 +37,71 @@ export default function AdminDashboard({ setActiveTab }) {
     try {
       setLoading(true);
 
-      // Students
-      const students = await getStudents();
-      setTotalStudents(students.length);
+      // 1. Fetch & Filter Students (Active Only)
+      const studentsData = await getStudents();
+      const activeStudents = studentsData.filter(s => 
+        s.status && s.status.toLowerCase() === "active"
+      );
+      setTotalStudents(activeStudents.length);
 
-      // Teachers
-      const teachers = await getTeachers();
-      setActiveTeachers(teachers.length);
+      // 2. Fetch & Filter Teachers (Active Only)
+      const teachersData = await getTeachers();
+      const activeTeachersList = teachersData.filter(t => 
+        t.status && t.status.toLowerCase() === "active"
+      );
+      setActiveTeachers(activeTeachersList.length);
 
-      // Attendance
-      const att = await getAttendance();
-      const today = new Date().toISOString().split("T")[0];
+      // 3. Attendance Calculation
+      const dateObj = new Date();
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const today = `${year}-${month}-${day}`; 
+      
+      // A. Get all classes first
+      const allClasses = await getClasses();
 
-      const todayRecords = att.filter((a) => a.date === today);
-      const presentCount = todayRecords.filter(
-        (a) => a.status === "present"
-      ).length;
+      // B. Fetch attendance for each class for TODAY in parallel
+      const attendancePromises = allClasses.map(cls => 
+        getAttendance(today, cls._id)
+          .catch(() => null) 
+      );
+      
+      const results = await Promise.all(attendancePromises);
+
+      // C. Sum up the "Present" counts strictly for ACTIVE students
+      let totalPresent = 0;
+      
+      results.forEach((record) => {
+        if (record && record.records && Array.isArray(record.records)) {
+           
+           const classPresent = record.records.filter(r => {
+             // Check 1: Is the attendance status "Present"?
+             const isMarkedPresent = r.status && r.status.toLowerCase() === "present";
+
+             // Check 2: Is the Student Account "Active"?
+             // (We use r.studentId.status because we populated it in the backend)
+             const studentAccountStatus = r.studentId?.status || "active"; 
+             const isAccountActive = studentAccountStatus.toLowerCase() === "active";
+
+             return isMarkedPresent && isAccountActive;
+           }).length;
+           
+           totalPresent += classPresent;
+        }
+      });
 
       setAttendanceToday({
-        present: presentCount,
-        total: students.length,
+        present: totalPresent,
+        total: activeStudents.length, // Denominator: Total Active Students
       });
+
     } catch (err) {
       console.error("Dashboard load error:", err);
     } finally {
       setLoading(false);
     }
   }
-
-
 
   // -----------------------
   // STATS BOX DESIGN
@@ -115,7 +151,6 @@ export default function AdminDashboard({ setActiveTab }) {
         {stats.map((stat) => {
           const Icon = stat.icon;
           
-
           return (
             <Card
               key={stat.title}
@@ -127,10 +162,6 @@ export default function AdminDashboard({ setActiveTab }) {
                   <div>
                     <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
                     <h3 className="text-gray-900 text-xl mb-1">{stat.value}</h3>
-
-                    <div className="flex items-center gap-1 text-sm">
-                      <span className="text-gray-600">{stat.change}</span>
-                    </div>
                   </div>
 
                   <div
@@ -147,85 +178,27 @@ export default function AdminDashboard({ setActiveTab }) {
 
       {/* ---------------- 2 PANELS ---------------- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* RECENT ACTIVITIES */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Activities</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-          {/*    {recentActivities.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-start gap-4 pb-4 border-b border-gray-100 last:border-0"
-                > */}
-                   {/* Avatar */}
-             {/*     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                    <span className="text-purple-600 font-medium">
-                      {item.teacher[0]}
-                    </span>
-                  </div>  
-            */}
-                  {/* Text Info */}
-            {/*      <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">
-                      {item.teacher}
-                      <span className="text-gray-600"> {item.action}</span>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">{item.time}</p>
-                  </div>
-               */} 
-                  {/* Type Badge */}
-              {/*      <Badge variant="outline" className="capitalize">
-                    {item.type}
-                  </Badge>
-                </div> 
-              ))} */}
+               <p className="text-gray-500 text-sm">No recent activities to show.</p>
             </div> 
           </CardContent>
         </Card>
 
-        {/* PENDING LEAVES */}
         <Card>
           <CardHeader>
             <CardTitle>Pending Leave Requests</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* {pendingLeaves.map((leave) => (
-                <div
-                  key={leave.id}
-                  className="p-4 bg-orange-50 border border-orange-100 rounded-lg"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="text-gray-900">{leave.teacher}</p>
-                      <p className="text-sm text-gray-600">{leave.type}</p>
-                    </div>
-                    <Badge className="bg-orange-500 text-white">
-                      Pending
-                    </Badge>
-                  </div>
-
-                  <p className="text-sm text-gray-600">
-                    Dates: {leave.dates}
-                  </p>
-
-                  <div className="flex gap-2 mt-3">
-                    <button className="flex-1 px-3 py-1.5 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600">
-                      Approve
-                    </button>
-                    <button className="flex-1 px-3 py-1.5 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600">
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              ))} */}
+               <p className="text-gray-500 text-sm">No pending leave requests.</p>
             </div>
           </CardContent>
         </Card>
-
       </div>
     </div>
   );

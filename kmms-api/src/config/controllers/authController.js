@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const generateToken = require("../../utils/generateToken");
+const bcrypt = require("bcryptjs");
 
 // REGISTER
 exports.registerUser = async (req, res, next) => {
@@ -84,4 +85,36 @@ exports.loginUser = async (req, res, next) => {
 
 exports.getMe = async (req, res) => {
   res.json(req.user);
+};
+
+// --- NEW FUNCTION: UPDATE PASSWORD ---
+exports.updatePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    // 1. Get the user (req.user is set by the 'protect' middleware)
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 2. Verify current password
+    // We use the same matchPassword method used in Login
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid current password" });
+    }
+
+    // 3. Update to new password
+    // The User model's pre-save hook will handle hashing this new password automatically
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+
+  } catch (err) {
+    console.error("Update Password Error:", err);
+    res.status(500).json({ message: "Server error while updating password" });
+  }
 };

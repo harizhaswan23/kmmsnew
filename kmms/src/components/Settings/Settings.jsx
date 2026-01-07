@@ -1,217 +1,155 @@
 import React, { useState } from "react";
-import { uploadProfileImage } from "../../api/upload";
+import { Loader2, Lock, User, Mail, Phone, Shield } from "lucide-react";
+import { updatePassword } from "../../api/auth"; // Ensure this import exists (see step 2)
 
 export default function Settings({ user }) {
-  const [profile, setProfile] = useState({
-    name: user.name || "",
-    email: user.email || "",
-    phone: user.phone || "",
-    role: user.role,
-  });
-
   const [passwords, setPasswords] = useState({
-    current: "",
-    new: "",
-    confirm: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
-
-  const [preview, setPreview] = useState(user.profileImage || "");
-
-  // === Handlers ===
-  const handleProfileChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
-  };
+  const [loading, setLoading] = useState(false);
 
   const handlePasswordChange = (e) => {
     setPasswords({ ...passwords, [e.target.name]: e.target.value });
   };
 
-  const handleSaveProfile = () => {
-    alert("Profile updated (connect backend later)");
-  };
+  const handlePasswordUpdate = async () => {
+    // Basic Validation
+    if (!passwords.currentPassword || !passwords.newPassword || !passwords.confirmPassword) {
+      alert("Please fill in all password fields.");
+      return;
+    }
 
-  const handlePasswordUpdate = () => {
-    if (passwords.new !== passwords.confirm) {
+    if (passwords.newPassword !== passwords.confirmPassword) {
       alert("New passwords do not match.");
       return;
     }
-    alert("Password updated (backend later)");
+
+    if (passwords.newPassword.length < 6) {
+      alert("New password must be at least 6 characters.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Call Backend API
+      await updatePassword({
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword
+      });
+      
+      alert("Password updated successfully!");
+      setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to update password.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Preview image
-    const reader = new FileReader();
-    reader.onloadend = () => setPreview(reader.result);
-    reader.readAsDataURL(file);
-
-    // Upload to backend
-    const upload = await uploadProfileImage(file);
-    setPreview(upload.imageUrl);
-
-    alert("Profile picture updated!");
-  };
-
-  // ============================
-  //         RETURN UI
-  // ============================
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
-      <p className="text-gray-600 mb-4">
-        Manage your account settings and preferences
-      </p>
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Account Settings</h2>
+        <p className="text-gray-500">View your profile information and manage security.</p>
+      </div>
 
-      {/* TOP GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* LEFT CARD — PROFILE PICTURE */}
-        <div className="bg-white p-6 rounded-xl shadow flex flex-col items-center">
-          <h3 className="font-semibold text-gray-800 mb-4">Profile Picture</h3>
-
-          <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200">
-            {preview ? (
-              <img
-                src={preview}
-                className="w-full h-full object-cover"
-                alt="profile"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-white bg-gradient-to-br from-purple-500 to-pink-500">
-                {user.name[0].toUpperCase()}
-              </div>
-            )}
+      {/* 1. READ-ONLY PROFILE INFO */}
+      <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <User className="w-5 h-5 text-blue-600" /> Profile Information
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Full Name</label>
+            <div className="p-3 bg-gray-50 border rounded-lg text-gray-700 font-medium">
+              {user.name}
+            </div>
           </div>
 
-          <label className="mt-4 px-4 py-2 border rounded-lg cursor-pointer bg-white hover:bg-gray-100">
-            Upload New Photo
-            <input type="file" className="hidden" onChange={handleImageUpload} />
-          </label>
-
-          <p className="mt-2 text-xs text-gray-500">JPG, PNG or GIF. Max size 2MB</p>
-        </div>
-
-        {/* RIGHT CARD — PROFILE DETAILS */}
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h3 className="font-semibold text-gray-800 mb-4">Profile Information</h3>
-
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="text-sm text-gray-600">Full Name</label>
-              <input
-                type="text"
-                name="name"
-                value={profile.name}
-                onChange={handleProfileChange}
-                className="w-full p-3 border rounded-lg bg-gray-50"
-              />
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Email Address</label>
+            <div className="p-3 bg-gray-50 border rounded-lg text-gray-700 flex items-center gap-2">
+              <Mail className="w-4 h-4 text-gray-400" />
+              {user.email}
             </div>
+          </div>
 
-            <div>
-              <label className="text-sm text-gray-600">Email Address</label>
-              <input
-                type="email"
-                name="email"
-                value={profile.email}
-                onChange={handleProfileChange}
-                className="w-full p-3 border rounded-lg bg-gray-50"
-              />
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Phone Number</label>
+            <div className="p-3 bg-gray-50 border rounded-lg text-gray-700 flex items-center gap-2">
+              <Phone className="w-4 h-4 text-gray-400" />
+              {user.phone || "Not provided"}
             </div>
+          </div>
 
-            <div>
-              <label className="text-sm text-gray-600">Phone Number</label>
-              <input
-                type="text"
-                name="phone"
-                value={profile.phone}
-                onChange={handleProfileChange}
-                className="w-full p-3 border rounded-lg bg-gray-50"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-600">Role</label>
-              <input
-                type="text"
-                value={profile.role}
-                disabled
-                className="w-full p-3 border rounded-lg bg-gray-100 text-gray-500"
-              />
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() =>
-                  setProfile({
-                    name: user.name,
-                    email: user.email,
-                    phone: user.phone,
-                    role: user.role,
-                  })
-                }
-                className="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleSaveProfile}
-                className="px-4 py-2 rounded-lg bg-pink-600 text-white hover:bg-pink-700"
-              >
-                Save Changes
-              </button>
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">Role</label>
+            <div className="p-3 bg-gray-50 border rounded-lg text-gray-700 flex items-center gap-2 capitalize">
+              <Shield className="w-4 h-4 text-gray-400" />
+              {user.role}
             </div>
           </div>
         </div>
       </div>
 
-      {/* CHANGE PASSWORD CARD */}
-      <div className="bg-white p-6 rounded-xl shadow">
-        <h3 className="font-semibold text-gray-800 mb-4">Change Password</h3>
+      {/* 2. CHANGE PASSWORD (FUNCTIONAL) */}
+      <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <Lock className="w-5 h-5 text-purple-600" /> Security
+        </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label className="text-sm text-gray-600">Current Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
             <input
               type="password"
-              name="current"
-              value={passwords.current}
+              name="currentPassword"
+              value={passwords.currentPassword}
               onChange={handlePasswordChange}
-              className="w-full p-3 border rounded-lg bg-gray-50"
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+              placeholder=""
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-600">New Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
             <input
               type="password"
-              name="new"
-              value={passwords.new}
+              name="newPassword"
+              value={passwords.newPassword}
               onChange={handlePasswordChange}
-              className="w-full p-3 border rounded-lg bg-gray-50"
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+              placeholder=""
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-600">Confirm Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
             <input
               type="password"
-              name="confirm"
-              value={passwords.confirm}
+              name="confirmPassword"
+              value={passwords.confirmPassword}
               onChange={handlePasswordChange}
-              className="w-full p-3 border rounded-lg bg-gray-50"
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+              placeholder=""
             />
           </div>
         </div>
 
-        <button
-          onClick={handlePasswordUpdate}
-          className="mt-4 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700"
-        >
-          Update Password
-        </button>
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={handlePasswordUpdate}
+            disabled={loading}
+            className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium flex items-center gap-2 disabled:opacity-50 transition-colors"
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            Update Password
+          </button>
+        </div>
       </div>
     </div>
   );

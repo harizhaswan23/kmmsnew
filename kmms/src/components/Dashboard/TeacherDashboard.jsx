@@ -3,44 +3,52 @@ import DashboardCard from "./DashboardCard";
 import { Users, Camera, MessageSquare, Clock, Loader2 } from "lucide-react";
 import LiveDateTime from "../Common/LiveDateTime";
 
-// Import Real APIs
 import { getStudents } from "../../api/students";
-import { getTeacherTimetable } from "../../api/timetables"; // Ensure this matches your API file name
+import { getTeacherTimetable } from "../../api/timetables"; 
 
-const TeacherDashboard = ({ setActiveTab }) => {
+// 1. Accept 'user' as a prop
+const TeacherDashboard = ({ setActiveTab, user }) => {
   const [stats, setStats] = useState({
     studentCount: 0,
     activityCount: 0,
     unreadMessages: 0,
   });
   
-  // Renamed from 'todaySchedule' to 'todayTimetable'
   const [todayTimetable, setTodayTimetable] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        // --- 1. Fetch Students ---
+        // 2. Use the prop directly (Safe & Fast)
+        const assignedClass = user?.classAssigned ? user.classAssigned.trim() : ""; 
+
+        // --- Fetch Students ---
         const studentsData = await getStudents();
         
-        // --- 2. Fetch Timetable ---
-        const timetableData = await getTeacherTimetable();
+        const myActiveStudents = studentsData.filter(student => {
+          // Check Status
+          const isActive = student.status && student.status.toLowerCase() === "active";
+          
+          // Check Class Match
+          const studentClassName = student.classId?.className || "";
+          const isMyClass = studentClassName.trim().toLowerCase() === assignedClass.toLowerCase();
+
+          return isActive && isMyClass;
+        });
         
-        // Filter timetable for TODAY
+        // --- Fetch Timetable ---
+        const timetableData = await getTeacherTimetable();
         const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
         const todayName = days[new Date().getDay()];
         
-        // Filter logic: Ensure we match the day string from DB
         const todaySlots = (timetableData || []).filter(
           (slot) => slot.day === todayName
         );
-
-        // Sort slots by start time (optional but good for display)
         todaySlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
 
         setStats({
-          studentCount: studentsData.length,
+          studentCount: myActiveStudents.length,
           activityCount: 0, 
           unreadMessages: 0, 
         });
@@ -55,7 +63,7 @@ const TeacherDashboard = ({ setActiveTab }) => {
     }
 
     fetchDashboardData();
-  }, []);
+  }, [user]); // Re-run if user changes
 
   if (loading) {
     return (
@@ -70,7 +78,6 @@ const TeacherDashboard = ({ setActiveTab }) => {
       <LiveDateTime />
       <h2 className="text-2xl font-bold text-gray-800">Teacher Dashboard</h2>
 
-      {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <DashboardCard
           title="My Students"
@@ -95,7 +102,6 @@ const TeacherDashboard = ({ setActiveTab }) => {
         />
       </div>
 
-      {/* Today's Timetable Section */}
       <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-800">
           <Clock className="w-5 h-5 text-indigo-600" /> Today's Timetable
@@ -109,7 +115,6 @@ const TeacherDashboard = ({ setActiveTab }) => {
                 className="p-4 bg-indigo-50 border border-indigo-200 rounded-lg flex justify-between items-center"
               >
                 <div>
-                  {/* Display Class Name (populated) or Subject */}
                   <p className="font-bold text-indigo-900">
                     {slot.classId?.className || slot.subject || "Unknown Class"}
                   </p>

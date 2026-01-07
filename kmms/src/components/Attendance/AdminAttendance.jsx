@@ -30,7 +30,7 @@ export default function AdminAttendance() {
     loadClasses();
   }, []);
 
-  // 2. Load Attendance
+  // 2. Load Attendance (FIXED: Filter Active Only)
   useEffect(() => {
     if (!selectedClassId || !selectedDate) return;
 
@@ -38,13 +38,24 @@ export default function AdminAttendance() {
       setLoading(true);
       try {
         const data = await getAttendance(selectedDate, selectedClassId);
-        const mappedRecords = data.records.map(r => ({
-           studentId: r.studentId._id || r.studentId, 
-           name: r.studentId.name || "Unknown",
-           status: r.status || "Present",
-           reason: r.reason || ""
-        }));
-        setAttendanceRecords(mappedRecords);
+        
+        const activeRecords = data.records
+          .map(r => {
+             // Handle populated student object
+             const studentObj = r.studentId || {};
+             return {
+               studentId: studentObj._id || r.studentId, 
+               name: studentObj.name || "Unknown",
+               status: r.status || "Present",
+               reason: r.reason || "",
+               // Capture student account status (active/graduated/withdrawn)
+               accountStatus: studentObj.status || "active" 
+             };
+          })
+          // FILTER: Only show "active" students
+          .filter(r => r.accountStatus.toLowerCase() === "active");
+
+        setAttendanceRecords(activeRecords);
       } catch (err) {
         setAttendanceRecords([]);
       } finally {
@@ -88,7 +99,7 @@ export default function AdminAttendance() {
 
   return (
     <div className="space-y-6">
-      {/* Top Section: Title & Date Picker */}
+      {/* Top Section */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <h2 className="text-2xl font-bold text-gray-900">Attendance (Admin)</h2>
         
@@ -104,7 +115,7 @@ export default function AdminAttendance() {
         </div>
       </div>
 
-      {/* Admin Tabs for Classes */}
+      {/* Admin Tabs */}
       <div className="bg-white p-2 rounded-lg border shadow-sm flex flex-wrap gap-2">
         {classes.length > 0 ? (
           classes.map((cls) => (
@@ -125,7 +136,7 @@ export default function AdminAttendance() {
         )}
       </div>
 
-      {/* Main Content Card (Matches Teacher UI) */}
+      {/* Main Content */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex justify-between">
@@ -137,17 +148,15 @@ export default function AdminAttendance() {
           {loading ? (
             <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto" />
           ) : attendanceRecords.length === 0 ? (
-            <div className="text-center p-8 text-gray-500">No students found in this class.</div>
+            <div className="text-center p-8 text-gray-500">No active students found in this class.</div>
           ) : (
             <div className="space-y-2">
-              {/* Table Header Row */}
               <div className="grid grid-cols-12 gap-4 bg-gray-50 p-2 rounded text-sm font-bold text-gray-600">
                 <div className="col-span-4">Name</div>
                 <div className="col-span-4 text-center">Status</div>
                 <div className="col-span-4">Reason</div>
               </div>
 
-              {/* Student Rows */}
               {attendanceRecords.map((r, i) => (
                 <div 
                   key={r.studentId} 
@@ -155,10 +164,8 @@ export default function AdminAttendance() {
                     r.status === "Absent" ? "bg-red-50 border-red-100" : "bg-white"
                   }`}
                 >
-                  {/* Name */}
                   <div className="col-span-4 font-medium truncate">{r.name}</div>
                   
-                  {/* Status Toggle */}
                   <div className="col-span-4 flex justify-center">
                     <button 
                       onClick={() => toggleStatus(i)} 
@@ -176,7 +183,6 @@ export default function AdminAttendance() {
                     </button>
                   </div>
 
-                  {/* Reason Select */}
                   <div className="col-span-4">
                     {r.status === "Absent" && (
                       <select 

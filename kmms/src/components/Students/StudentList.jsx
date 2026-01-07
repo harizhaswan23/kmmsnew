@@ -27,7 +27,8 @@ const StudentList = ({
   onDelete,
   onAdd,
   onUpdate,
-  onAddClass
+  onAddClass,
+  userRole = "admin", // <--- 1. Added userRole prop (Default is 'admin')
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterAgeGroup, setFilterAgeGroup] = useState("all");
@@ -101,7 +102,6 @@ const StudentList = ({
       Number(filterAgeGroup) === studentAge;
 
     // 4. Class filter
-    // Check if classId is an object (populated) or string
     const studentClassId = typeof student.classId === 'object' ? student.classId?._id : student.classId;
     const matchesClassFilter =
       filterClass === "all" ||
@@ -145,11 +145,8 @@ const StudentList = ({
     };
 
     if (editingStudent) {
-      // EDIT MODE
-      // Ensure we use _id or id depending on your DB structure
       await onUpdate(editingStudent._id || editingStudent.id, payload);
     } else {
-      // ADD MODE
       await onAdd(payload);
     }
 
@@ -211,295 +208,298 @@ const StudentList = ({
           </p>
         </div>
 
-        <div className="flex gap-3">
-          {/* Add Class Button */}
-          <Dialog open={isAddClassDialogOpen} onOpenChange={setIsAddClassDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700">
-                <Plus className="w-4 h-4" />
-                Add Class
-              </Button>
-            </DialogTrigger>
+        {/* --- 2. HIDE BUTTONS FOR NON-ADMINS --- */}
+        {userRole === "admin" && (
+          <div className="flex gap-3">
+            {/* Add Class Button */}
+            <Dialog open={isAddClassDialogOpen} onOpenChange={setIsAddClassDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700">
+                  <Plus className="w-4 h-4" />
+                  Add Class
+                </Button>
+              </DialogTrigger>
 
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add New Class</DialogTitle>
-              </DialogHeader>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Add New Class</DialogTitle>
+                </DialogHeader>
 
-              <form onSubmit={handleAddClassSubmit} className="space-y-4 py-2">
-                {/* Class Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Class Name *
-                  </label>
-                  <Input
-                    placeholder="e.g., 4A, 5B, 6C"
-                    value={classFormData.className}
-                    onChange={(e) =>
-                      setClassFormData({ ...classFormData, className: e.target.value })
-                    }
-                    required
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Enter the class name (e.g., 4A for age 4 class A)
-                  </p>
-                </div>
-
-                {/* Year Group (Age) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Year Group (Age) *
-                  </label>
-                  <select
-                    className="border rounded-lg p-2 w-full"
-                    value={classFormData.yearGroup}
-                    onChange={(e) =>
-                      setClassFormData({ ...classFormData, yearGroup: e.target.value })
-                    }
-                    required
-                  >
-                    <option value="">Select Age Group</option>
-                    <option value="4">4 Years Old</option>
-                    <option value="5">5 Years Old</option>
-                    <option value="6">6 Years Old</option>
-                  </select>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    type="button"
-                    className="flex-1 bg-gray-100 text-gray-800 hover:bg-gray-200"
-                    onClick={() => {
-                      setIsAddClassDialogOpen(false);
-                      setClassFormData({
-                        className: "",
-                        yearGroup: "",
-                      });
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
-                    Save Class
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-
-          {/* Add Student Button */}
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700">
-                <Plus className="w-4 h-4" />
-                Add Student
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingStudent ? "Edit Student" : "Add New Student"}
-                </DialogTitle>
-              </DialogHeader>
-
-              <form onSubmit={handleAddSubmit} className="space-y-4 py-2">
-                {/* Full Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name *
-                  </label>
-                  <Input
-                    placeholder="Enter full name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                {/* Date of Birth */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date of Birth *
-                  </label>
-                  <Input
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) =>
-                      setFormData({ ...formData, dateOfBirth: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                {/* Gender */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Gender *
-                  </label>
-                  <select
-                    className="border rounded-lg p-2 w-full"
-                    value={formData.gender}
-                    onChange={(e) =>
-                      setFormData({ ...formData, gender: e.target.value })
-                    }
-                    required
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
-                </div>
-
-                {/* Class */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Class *
-                  </label>
-                  <select
-                    className="border rounded-lg p-2 w-full"
-                    value={formData.classId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, classId: e.target.value })
-                    }
-                    required
-                  >
-                    <option value="">Select Class</option>
-                    {classes.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name || c.className}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Teacher */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Assigned Teacher
-                  </label>
-                  <select
-                    className="border rounded-lg p-2 w-full"
-                    value={formData.teacherId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, teacherId: e.target.value })
-                    }
-                  >
-                    <option value="">Select Teacher (Optional)</option>
-                    {Array.isArray(teachers) &&
-                      teachers.map((t) => (
-                        <option key={t._id} value={t._id}>
-                          {t.name}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-
-                {/* Parent Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Parent Name *
-                  </label>
-                  <Input
-                    placeholder="Enter parent's full name"
-                    value={formData.parentName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, parentName: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                {/* Parent Email (for registration) */}
-                {!editingStudent && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Parent Email (for login) *
-                      </label>
-                      <Input
-                        type="email"
-                        placeholder="parent@example.com"
-                        value={formData.parentEmail}
-                        onChange={(e) =>
-                          setFormData({ ...formData, parentEmail: e.target.value })
-                        }
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Parent Password (for login) *
-                      </label>
-                      <Input
-                        type="password"
-                        placeholder="Enter password for parent account"
-                        value={formData.parentPassword}
-                        onChange={(e) =>
-                          setFormData({ ...formData, parentPassword: e.target.value })
-                        }
-                        required
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* Status (only show when editing) */}
-                {editingStudent && (
+                <form onSubmit={handleAddClassSubmit} className="space-y-4 py-2">
+                  {/* Class Name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Status *
+                      Class Name *
+                    </label>
+                    <Input
+                      placeholder="e.g., 4A, 5B, 6C"
+                      value={classFormData.className}
+                      onChange={(e) =>
+                        setClassFormData({ ...classFormData, className: e.target.value })
+                      }
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Enter the class name (e.g., 4A for age 4 class A)
+                    </p>
+                  </div>
+
+                  {/* Year Group (Age) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Year Group (Age) *
                     </label>
                     <select
                       className="border rounded-lg p-2 w-full"
-                      value={formData.status}
+                      value={classFormData.yearGroup}
                       onChange={(e) =>
-                        setFormData({ ...formData, status: e.target.value })
+                        setClassFormData({ ...classFormData, yearGroup: e.target.value })
                       }
                       required
                     >
-                      <option value="active">Active</option>
-                      <option value="graduated">Graduated</option>
-                      <option value="withdrawn">Withdrawn</option>
+                      <option value="">Select Age Group</option>
+                      <option value="4">4 Years Old</option>
+                      <option value="5">5 Years Old</option>
+                      <option value="6">6 Years Old</option>
                     </select>
                   </div>
-                )}
 
-                {/* Actions */}
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    type="button"
-                    className="flex-1 bg-gray-100 text-gray-800 hover:bg-gray-200"
-                    onClick={() => {
-                      setIsAddDialogOpen(false);
-                      setEditingStudent(null);
-                      setFormData({
-                        name: "",
-                        dateOfBirth: "",
-                        gender: "",
-                        classId: "",
-                        parentName: "",
-                        parentEmail: "",
-                        parentPassword: "",
-                        teacherId: "",
-                        status: "active",
-                      });
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="flex-1">
-                    {editingStudent ? "Update" : "Save"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      type="button"
+                      className="flex-1 bg-gray-100 text-gray-800 hover:bg-gray-200"
+                      onClick={() => {
+                        setIsAddClassDialogOpen(false);
+                        setClassFormData({
+                          className: "",
+                          yearGroup: "",
+                        });
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
+                      Save Class
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            {/* Add Student Button */}
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700">
+                  <Plus className="w-4 h-4" />
+                  Add Student
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingStudent ? "Edit Student" : "Add New Student"}
+                  </DialogTitle>
+                </DialogHeader>
+
+                <form onSubmit={handleAddSubmit} className="space-y-4 py-2">
+                  {/* Full Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name *
+                    </label>
+                    <Input
+                      placeholder="Enter full name"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+
+                  {/* Date of Birth */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date of Birth *
+                    </label>
+                    <Input
+                      type="date"
+                      value={formData.dateOfBirth}
+                      onChange={(e) =>
+                        setFormData({ ...formData, dateOfBirth: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+
+                  {/* Gender */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Gender *
+                    </label>
+                    <select
+                      className="border rounded-lg p-2 w-full"
+                      value={formData.gender}
+                      onChange={(e) =>
+                        setFormData({ ...formData, gender: e.target.value })
+                      }
+                      required
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+
+                  {/* Class */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Class *
+                    </label>
+                    <select
+                      className="border rounded-lg p-2 w-full"
+                      value={formData.classId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, classId: e.target.value })
+                      }
+                      required
+                    >
+                      <option value="">Select Class</option>
+                      {classes.map((c) => (
+                        <option key={c._id} value={c._id}>
+                          {c.name || c.className}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Teacher */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Assigned Teacher
+                    </label>
+                    <select
+                      className="border rounded-lg p-2 w-full"
+                      value={formData.teacherId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, teacherId: e.target.value })
+                      }
+                    >
+                      <option value="">Select Teacher (Optional)</option>
+                      {Array.isArray(teachers) &&
+                        teachers.map((t) => (
+                          <option key={t._id} value={t._id}>
+                            {t.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {/* Parent Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Parent Name *
+                    </label>
+                    <Input
+                      placeholder="Enter parent's full name"
+                      value={formData.parentName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, parentName: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+
+                  {/* Parent Email (for registration) */}
+                  {!editingStudent && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Parent Email (for login) *
+                        </label>
+                        <Input
+                          type="email"
+                          placeholder="parent@example.com"
+                          value={formData.parentEmail}
+                          onChange={(e) =>
+                            setFormData({ ...formData, parentEmail: e.target.value })
+                          }
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Parent Password (for login) *
+                        </label>
+                        <Input
+                          type="password"
+                          placeholder="Enter password for parent account"
+                          value={formData.parentPassword}
+                          onChange={(e) =>
+                            setFormData({ ...formData, parentPassword: e.target.value })
+                          }
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Status (only show when editing) */}
+                  {editingStudent && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Status *
+                      </label>
+                      <select
+                        className="border rounded-lg p-2 w-full"
+                        value={formData.status}
+                        onChange={(e) =>
+                          setFormData({ ...formData, status: e.target.value })
+                        }
+                        required
+                      >
+                        <option value="active">Active</option>
+                        <option value="graduated">Graduated</option>
+                        <option value="withdrawn">Withdrawn</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      type="button"
+                      className="flex-1 bg-gray-100 text-gray-800 hover:bg-gray-200"
+                      onClick={() => {
+                        setIsAddDialogOpen(false);
+                        setEditingStudent(null);
+                        setFormData({
+                          name: "",
+                          dateOfBirth: "",
+                          gender: "",
+                          classId: "",
+                          parentName: "",
+                          parentEmail: "",
+                          parentPassword: "",
+                          teacherId: "",
+                          status: "active",
+                        });
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" className="flex-1">
+                      {editingStudent ? "Update" : "Save"}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
       </div>
 
       {/* STATS CARDS */}
@@ -663,32 +663,19 @@ const StudentList = ({
                 
                 return (
                   <TableRow key={id}>
-      {/* Student name column */}
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  
-                  {/* --- OLD CODE (Blue Circle) --- */}
-                  {/* <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 text-white flex items-center justify-center text-sm font-semibold">
-                    {displayName
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </div> 
-                  */}
-
-                  {/* --- NEW CODE (Number Only) --- */}
-                  <span className="text-gray-500 font-bold text-lg min-w-[24px]">
-                    {index + 1}.
-                  </span>
-                  {/* ----------------------------- */}
-
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {displayName}
-                    </p>
-                  </div>
-                </div>
-              </TableCell>
+                    {/* Student name column */}
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-500 font-bold text-lg min-w-[24px]">
+                          {index + 1}.
+                        </span>
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {displayName}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
 
                     {/* Age */}
                     <TableCell>{displayAge || "-"}</TableCell>
@@ -726,35 +713,38 @@ const StudentList = ({
                       </span>
                     </TableCell>
 
-                    {/* Actions */}
+                    {/* Actions - CONDITIONALLY RENDERED */}
                     <TableCell className="text-right">
                       {studentView === "current" ? (
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            type="button"
-                            className="bg-transparent text-gray-600 hover:bg-gray-100 px-2 py-1"
-                            onClick={() => {
-                              setEditingStudent(student);
-                              setFormData({
-                                name: student.name || "",
-                                dateOfBirth: student.dateOfBirth
-                                  ? student.dateOfBirth.split("T")[0]
-                                  : "",
-                                gender: student.gender || "",
-                                classId: student.classId?._id || student.classId || "",
-                                parentName: student.parentName || "",
-                                parentEmail: "",
-                                parentPassword: "",
-                                teacherId: student.teacherId?._id || student.teacherId || "",
-                                status: student.status || "active",
-                              });
+                        /* Only show edit if admin */
+                        userRole === "admin" && (
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              className="bg-transparent text-gray-600 hover:bg-gray-100 px-2 py-1"
+                              onClick={() => {
+                                setEditingStudent(student);
+                                setFormData({
+                                  name: student.name || "",
+                                  dateOfBirth: student.dateOfBirth
+                                    ? student.dateOfBirth.split("T")[0]
+                                    : "",
+                                  gender: student.gender || "",
+                                  classId: student.classId?._id || student.classId || "",
+                                  parentName: student.parentName || "",
+                                  parentEmail: "",
+                                  parentPassword: "",
+                                  teacherId: student.teacherId?._id || student.teacherId || "",
+                                  status: student.status || "active",
+                                });
 
-                              setIsAddDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="w-4 h-4 text-gray-600" />
-                          </Button>
-                        </div>
+                                setIsAddDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4 text-gray-600" />
+                            </Button>
+                          </div>
+                        )
                       ) : (
                         <span className="text-gray-400 italic text-sm">
                           Archived

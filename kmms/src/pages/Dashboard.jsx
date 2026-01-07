@@ -80,10 +80,10 @@ const Dashboard = ({ user, onLogout }) => {
     // ========== TEACHER ==========
     if (role === "teacher") {
       if (activeTab === "dashboard")
-        return <TeacherDashboard setActiveTab={setActiveTab} />;
+        return <TeacherDashboard setActiveTab={setActiveTab} user={user} />;
 
       if (activeTab === "students")
-        return <TeacherStudentView />;
+        return <TeacherStudentView user={user}/>;
       
       if (activeTab === "timetables")
         return <TeacherTimetable />;

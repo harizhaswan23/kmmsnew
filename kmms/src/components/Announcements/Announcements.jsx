@@ -70,9 +70,10 @@ export default function Announcements() {
     return <p className="p-4 text-gray-600">Loading announcements...</p>;
   }
 
-  // Filtering by role (Teacher/Parent/All)
+  // Filtering Logic
   const filtered = announcements
     .filter((a) => {
+      // Frontend Role Filter (Only strictly applies if Admin uses the dropdown)
       if (roleFilter === "all") return true;
       return a.targetRole === roleFilter || a.targetRole === "all";
     })
@@ -120,18 +121,21 @@ export default function Announcements() {
           }}
         />
 
-        <select
-          className="p-3 border rounded-lg"
-          value={roleFilter}
-          onChange={(e) => {
-            setRoleFilter(e.target.value);
-            setCurrentPage(1);
-          }}
-        >
-          <option value="all">All</option>
-          <option value="teacher">Teacher Only</option>
-          <option value="parent">Parent Only</option>
-        </select>
+        {/* --- HIDE DROPDOWN IF NOT ADMIN --- */}
+        {role === "admin" && (
+          <select
+            className="p-3 border rounded-lg"
+            value={roleFilter}
+            onChange={(e) => {
+              setRoleFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="all">View All</option>
+            <option value="teacher">Teacher Only</option>
+            <option value="parent">Parent Only</option>
+          </select>
+        )}
       </div>
 
       {/* ADD ANNOUNCEMENT FORM (ADMIN ONLY) */}
@@ -197,47 +201,52 @@ export default function Announcements() {
           className="bg-white p-4 rounded-xl shadow flex justify-between items-start"
         >
           <div className="max-w-xl">
-            <p className="font-semibold text-lg">{a.title}</p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="font-semibold text-lg">{a.title}</p>
+              {/* Optional: Show Badge for Admins to know target audience */}
+              {role === "admin" && a.targetRole !== "all" && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border uppercase font-bold">
+                  {a.targetRole}
+                </span>
+              )}
+            </div>
 
             <ReactMarkdown
-          components={{
-            p: ({ children }) => (
-              <p className="text-gray-800 mb-2">{children}</p>
-            ),
-            strong: ({ children }) => (
-              <strong className="font-semibold">{children}</strong>
-            ),
-            em: ({ children }) => (
-              <em className="italic">{children}</em>
-            ),
-            ul: ({ children }) => (
-              <ul className="list-disc pl-6 mb-2">{children}</ul>
-            ),
-            ol: ({ children }) => (
-              <ol className="list-decimal pl-6 mb-2">{children}</ol>
-            ),
-            li: ({ children }) => (
-              <li className="mb-1">{children}</li>
-            ),
-            a: ({ href, children }) => (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline"
-              >
-                {children}
-              </a>
-            ),
-          }}
-        >
-          {a.message}
-        </ReactMarkdown>
-
+              components={{
+                p: ({ children }) => (
+                  <p className="text-gray-800 mb-2">{children}</p>
+                ),
+                strong: ({ children }) => (
+                  <strong className="font-semibold">{children}</strong>
+                ),
+                em: ({ children }) => (
+                  <em className="italic">{children}</em>
+                ),
+                ul: ({ children }) => (
+                  <ul className="list-disc pl-6 mb-2">{children}</ul>
+                ),
+                ol: ({ children }) => (
+                  <ol className="list-decimal pl-6 mb-2">{children}</ol>
+                ),
+                li: ({ children }) => <li className="mb-1">{children}</li>,
+                a: ({ href, children }) => (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {a.message}
+            </ReactMarkdown>
 
             <p className="text-xs text-gray-400 mt-1">
               {new Date(a.createdAt).toLocaleDateString()} •{" "}
-              {a.createdBy?.name || ""}
+              {a.createdBy?.name || "Admin"}
             </p>
           </div>
 

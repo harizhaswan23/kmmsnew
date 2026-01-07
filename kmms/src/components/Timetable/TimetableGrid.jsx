@@ -4,10 +4,10 @@ import { X } from "lucide-react";
 const TimetableGrid = ({ slots = [], onDeleteSlot }) => {
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
   
-  // Time Range: 8:00 AM to 12:00 PM with 30-minute intervals
+  // Custom Time Intervals as requested
   const timeIntervals = [
-    "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", 
-    "11:00", "11:30", "12:00"
+    "08:00", "08:30", "09:00", "09:30", "09:50", 
+    "10:20", "10:50", "11:20", "11:50"
   ];
 
   // Helper: Convert time string to minutes
@@ -22,8 +22,8 @@ const TimetableGrid = ({ slots = [], onDeleteSlot }) => {
     const endMin = getMinutes(end);
     const dayStartMin = getMinutes("08:00"); 
     
-    // Total duration: 4 hours (8am - 12pm) = 240 minutes
-    const totalDuration = 240; 
+    // Updated Duration: 8:00 AM to 11:50 AM = 3 hours 50 mins = 230 minutes
+    const totalDuration = 230; 
     
     const left = ((startMin - dayStartMin) / totalDuration) * 100;
     const width = ((endMin - startMin) / totalDuration) * 100;
@@ -38,10 +38,9 @@ const TimetableGrid = ({ slots = [], onDeleteSlot }) => {
     <div className="min-w-[800px] p-4">
       {/* --- HEADER ROW (TIMES) --- */}
       <div className="flex border-b border-gray-200 mb-2 pb-2 sticky top-0 bg-white z-10 relative">
-        <div className="w-24 flex-shrink-0 font-bold text-gray-500 text-sm">Day</div>
+        <div className="w-24 flex-shrink-0 font-bold text-gray-500 text-sm">Day/Time</div>
         <div className="flex-1 relative h-6">
           {timeIntervals.map((time) => {
-            // REMOVED the check that hid ":30" times. Now all times show.
             return (
               <div 
                 key={time} 
@@ -59,15 +58,15 @@ const TimetableGrid = ({ slots = [], onDeleteSlot }) => {
       <div className="space-y-4 relative">
         
         {/* FIXED SNACK TIME COLUMN (9:30 - 9:50) */}
-        <div 
-          className="absolute top-0 bottom-0 bg-orange-50/80 border-l border-r border-orange-200 z-0 flex flex-col items-center justify-center pointer-events-none"
-          style={{ 
-            ...getSlotStyle("09:30", "09:50"), 
-            left: `calc(${getSlotStyle("09:30", "09:50").left} + 6rem)`
-          }}
-        >
-          <div className="rotate-90 text-[10px] font-bold text-orange-400 uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
-             Snack
+        {/* Wrapper: Positions the context exactly over the timeline lane (skipping the 6rem sidebar) */}
+        <div className="absolute top-0 bottom-0 left-24 right-0 z-0">
+          <div 
+            className="absolute top-0 bottom-0 bg-orange-50/80 border-l border-r border-orange-200 flex flex-col items-center justify-center pointer-events-none"
+            style={getSlotStyle("09:30", "09:50")} 
+          >
+            <div className="rotate-90 text-[14px] font-bold text-orange-400 uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
+               Snack
+            </div>
           </div>
         </div>
 
@@ -82,11 +81,10 @@ const TimetableGrid = ({ slots = [], onDeleteSlot }) => {
             {/* Timetable Lane */}
             <div className="flex-1 relative h-full bg-gray-50/50 rounded-lg">
               
-              {/* Grid Lines for ALL intervals (including 8:30, 9:30, etc.) */}
+              {/* Grid Lines for specified intervals */}
               {timeIntervals.map((time) => (
                   <div
                     key={time}
-                    // Dashed lines for all times to make alignment easier
                     className="absolute top-0 bottom-0 border-l border-gray-200 border-dashed"
                     style={{ left: getSlotStyle(time, time).left }}
                   />

@@ -232,7 +232,6 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
                   <option value="">Select Qualification</option>
                   <option value="Diploma">Diploma</option>
                   <option value="Degree">Degree</option>
-                  <option value="Masters">Masters</option>
                 </select>
               </div>
 
