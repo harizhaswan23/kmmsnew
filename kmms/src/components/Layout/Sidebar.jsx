@@ -90,13 +90,13 @@ const Sidebar = ({
             <button
               key={id}
               onClick={() => setActiveTab(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-sm font-medium
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-sm font-medium transition-all duration-200 hover:translate-x-1
                 ${isActive
                   ? "bg-pink-600 text-white shadow-sm"
                   : "text-gray-700 hover:bg-gray-100"
                 }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className={`w-4 h-4 ${isActive ? "animate-pulse" : ""}`} />
               {label}
             </button>
           );
@@ -116,14 +116,14 @@ const Sidebar = ({
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:block w-64 bg-white shadow-md px-4 py-6">
+      <aside className="hidden md:block w-64 bg-white shadow-md px-4 py-6 animate-in slide-in-from-left duration-500">
         {content}
       </aside>
 
       {/* Mobile overlay sidebar */}
       {isOpen && (
-        <div className="fixed inset-0 z-40 flex md:hidden">
-          <div className="w-64 bg-white shadow-md px-4 py-6">
+        <div className="fixed inset-0 z-40 flex md:hidden animate-in fade-in duration-200">
+          <div className="w-64 bg-white shadow-md px-4 py-6 animate-in slide-in-from-left duration-300">
             {content}
           </div>
           <div

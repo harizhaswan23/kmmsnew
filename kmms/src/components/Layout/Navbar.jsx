@@ -45,7 +45,7 @@ const Navbar = ({ user, onMenuClick, onLogout }) => {
           {/* Avatar button */}
           <button
             onClick={() => setOpen(!open)}
-            className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center hover:bg-indigo-200 transition"
+            className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center hover:bg-indigo-200 transition-all hover:scale-105 active:scale-95"
           >
             <span className="text-indigo-700 font-bold uppercase">
               {user.name?.charAt(0)}
@@ -54,14 +54,14 @@ const Navbar = ({ user, onMenuClick, onLogout }) => {
 
           {/* Dropdown Menu */}
           {open && (
-            <div className="absolute right-0 top-12 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50">
+            <div className="absolute right-0 top-12 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 animate-in fade-in zoom-in-95 duration-200 slide-in-from-top-2">
               
-              <button className="flex w-full items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100">
+              <button className="flex w-full items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
                 <User className="w-4 h-4" />
                 Profile
               </button>
 
-              <button className="flex w-full items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100">
+              <button className="flex w-full items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors">
                 <Settings className="w-4 h-4" />
                 Settings
               </button>
