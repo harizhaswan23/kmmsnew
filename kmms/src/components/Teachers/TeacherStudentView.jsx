@@ -62,6 +62,7 @@ export default function TeacherStudents({ user }) {
         students={students}
         teachers={teachers}
         onDelete={handleDelete}
+        userRole="teacher"
       />
     </div>
   );
