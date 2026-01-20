@@ -3,63 +3,22 @@
 > react-scripts start
 
 [baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
-(node:2876) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:5288) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:2876) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:5288) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
 Starting the development server...
 
-Compiled with warnings.
+Compiled successfully!
 
-[eslint]
-src/components/Activities/ActivitiesTracking.jsx
-  Line 5:3:   'Users' is defined but never used                                                                              no-unused-vars
-  Line 49:6:  React Hook useEffect has a missing dependency: 'myStudents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+You can now view kmms in the browser.
 
-src/components/Common/NotificationBell.jsx
-  Line 4:22:  'getSocket' is defined but never used  no-unused-vars
+  Local:            http://localhost:3000
+  On Your Network:  http://192.168.0.2:3000
 
-src/components/Leave/LeaveManagement.jsx
-  Line 3:10:  'Clock' is defined but never used  no-unused-vars
+Note that the development build is not optimized.
+To create a production build, use npm run build.
 
-src/components/Leave/LeaveRequest.jsx
-  Line 3:10:  'FileText' is defined but never used  no-unused-vars
-
-src/components/Payments/PaymentManagement.jsx
-  Line 3:10:  'DollarSign' is defined but never used  no-unused-vars
-
-src/components/Timetable/AdminTimetable.jsx
-  Line 2:16:  'Save' is defined but never used  no-unused-vars
-
-src/data/sampleData.jsx
-  Line 61:1:  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
-
-Search for the keywords to learn more about each warning.
-To ignore, add // eslint-disable-next-line to the line before.
-
-WARNING in [eslint]
-src/components/Activities/ActivitiesTracking.jsx
-  Line 5:3:   'Users' is defined but never used                                                                              no-unused-vars
-  Line 49:6:  React Hook useEffect has a missing dependency: 'myStudents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/Common/NotificationBell.jsx
-  Line 4:22:  'getSocket' is defined but never used  no-unused-vars
-
-src/components/Leave/LeaveManagement.jsx
-  Line 3:10:  'Clock' is defined but never used  no-unused-vars
-
-src/components/Leave/LeaveRequest.jsx
-  Line 3:10:  'FileText' is defined but never used  no-unused-vars
-
-src/components/Payments/PaymentManagement.jsx
-  Line 3:10:  'DollarSign' is defined but never used  no-unused-vars
-
-src/components/Timetable/AdminTimetable.jsx
-  Line 2:16:  'Save' is defined but never used  no-unused-vars
-
-src/data/sampleData.jsx
-  Line 61:1:  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
-
-webpack compiled with 1 warning
+webpack compiled successfully
 Compiling...
 Compiled with warnings.
 
@@ -68,28 +27,6 @@ src/App.js
   Line 1:27:   'useEffect' is defined but never used                 no-unused-vars
   Line 5:8:    'http' is defined but never used                      no-unused-vars
   Line 12:24:  'setCheckingAuth' is assigned a value but never used  no-unused-vars
-
-src/components/Activities/ActivitiesTracking.jsx
-  Line 5:3:   'Users' is defined but never used                                                                              no-unused-vars
-  Line 49:6:  React Hook useEffect has a missing dependency: 'myStudents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/Common/NotificationBell.jsx
-  Line 4:22:  'getSocket' is defined but never used  no-unused-vars
-
-src/components/Leave/LeaveManagement.jsx
-  Line 3:10:  'Clock' is defined but never used  no-unused-vars
-
-src/components/Leave/LeaveRequest.jsx
-  Line 3:10:  'FileText' is defined but never used  no-unused-vars
-
-src/components/Payments/PaymentManagement.jsx
-  Line 3:10:  'DollarSign' is defined but never used  no-unused-vars
-
-src/components/Timetable/AdminTimetable.jsx
-  Line 2:16:  'Save' is defined but never used  no-unused-vars
-
-src/data/sampleData.jsx
-  Line 61:1:  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
 
 Search for the keywords to learn more about each warning.
 To ignore, add // eslint-disable-next-line to the line before.
@@ -100,79 +37,7 @@ src/App.js
   Line 5:8:    'http' is defined but never used                      no-unused-vars
   Line 12:24:  'setCheckingAuth' is assigned a value but never used  no-unused-vars
 
-src/components/Activities/ActivitiesTracking.jsx
-  Line 5:3:   'Users' is defined but never used                                                                              no-unused-vars
-  Line 49:6:  React Hook useEffect has a missing dependency: 'myStudents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/Common/NotificationBell.jsx
-  Line 4:22:  'getSocket' is defined but never used  no-unused-vars
-
-src/components/Leave/LeaveManagement.jsx
-  Line 3:10:  'Clock' is defined but never used  no-unused-vars
-
-src/components/Leave/LeaveRequest.jsx
-  Line 3:10:  'FileText' is defined but never used  no-unused-vars
-
-src/components/Payments/PaymentManagement.jsx
-  Line 3:10:  'DollarSign' is defined but never used  no-unused-vars
-
-src/components/Timetable/AdminTimetable.jsx
-  Line 2:16:  'Save' is defined but never used  no-unused-vars
-
-src/data/sampleData.jsx
-  Line 61:1:  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
-
 webpack compiled with 1 warning
 Compiling...
-Compiled with warnings.
-
-[eslint]
-src/components/Activities/ActivitiesTracking.jsx
-  Line 5:3:   'Users' is defined but never used                                                                              no-unused-vars
-  Line 49:6:  React Hook useEffect has a missing dependency: 'myStudents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/Common/NotificationBell.jsx
-  Line 4:22:  'getSocket' is defined but never used  no-unused-vars
-
-src/components/Leave/LeaveManagement.jsx
-  Line 3:10:  'Clock' is defined but never used  no-unused-vars
-
-src/components/Leave/LeaveRequest.jsx
-  Line 3:10:  'FileText' is defined but never used  no-unused-vars
-
-src/components/Payments/PaymentManagement.jsx
-  Line 3:10:  'DollarSign' is defined but never used  no-unused-vars
-
-src/components/Timetable/AdminTimetable.jsx
-  Line 2:16:  'Save' is defined but never used  no-unused-vars
-
-src/data/sampleData.jsx
-  Line 61:1:  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
-
-Search for the keywords to learn more about each warning.
-To ignore, add // eslint-disable-next-line to the line before.
-
-WARNING in [eslint]
-src/components/Activities/ActivitiesTracking.jsx
-  Line 5:3:   'Users' is defined but never used                                                                              no-unused-vars
-  Line 49:6:  React Hook useEffect has a missing dependency: 'myStudents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-
-src/components/Common/NotificationBell.jsx
-  Line 4:22:  'getSocket' is defined but never used  no-unused-vars
-
-src/components/Leave/LeaveManagement.jsx
-  Line 3:10:  'Clock' is defined but never used  no-unused-vars
-
-src/components/Leave/LeaveRequest.jsx
-  Line 3:10:  'FileText' is defined but never used  no-unused-vars
-
-src/components/Payments/PaymentManagement.jsx
-  Line 3:10:  'DollarSign' is defined but never used  no-unused-vars
-
-src/components/Timetable/AdminTimetable.jsx
-  Line 2:16:  'Save' is defined but never used  no-unused-vars
-
-src/data/sampleData.jsx
-  Line 61:1:  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
-
-webpack compiled with 1 warning
+Compiled successfully!
+webpack compiled successfully

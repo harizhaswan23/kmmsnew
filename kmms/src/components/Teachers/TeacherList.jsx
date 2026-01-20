@@ -27,6 +27,7 @@ import { getClasses } from "../../api/classes";
 const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState(null);
+  const [activeTab, setActiveTab] = useState("Active"); // "Active" | "Inactive"
   
   // 2. State for storing classes fetched from DB
   const [availableClasses, setAvailableClasses] = useState([]);
@@ -101,6 +102,10 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
 
     resetForm();
   };
+
+  const filteredTeachers = teachers.filter(
+    (teacher) => (teacher.status || "Active") === activeTab
+  );
 
   return (
     <div className="space-y-6">
@@ -301,10 +306,29 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
         </Dialog>
       </div>
 
+      {/* Tabs */}
+      <div className="flex space-x-2 border-b">
+        {["Active", "Inactive"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`pb-2 px-4 text-sm font-medium transition-colors border-b-2 ${
+              activeTab === tab
+                ? "border-pink-600 text-pink-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {tab} Teachers
+          </button>
+        ))}
+      </div>
+
       {/* Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Teachers ({teachers.length})</CardTitle>
+          <CardTitle>
+            {activeTab} Teachers ({filteredTeachers.length})
+          </CardTitle>
         </CardHeader>
 
         <CardContent>
@@ -325,7 +349,7 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
             </TableHeader>
 
             <TableBody>
-              {teachers.map((teacher) => (
+              {filteredTeachers.map((teacher) => (
                 <TableRow key={teacher._id || teacher.id}>
                   <TableCell className="font-medium">{teacher.name}</TableCell>
                   <TableCell>{teacher.email}</TableCell>
@@ -392,10 +416,10 @@ const TeacherList = ({ teachers = [], onAdd, onUpdate, onDelete }) => {
                 </TableRow>
               ))}
 
-              {teachers.length === 0 && (
+              {filteredTeachers.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={10} className="text-center text-gray-500 h-24">
-                    No teachers found.
+                    No {activeTab.toLowerCase()} teachers found.
                   </TableCell>
                 </TableRow>
               )}
