@@ -151,7 +151,9 @@ const Dashboard = ({ user, onLogout }) => {
         />
 
         <main className="p-4 md:p-6">
-          <div className="max-w-6xl mx-auto">{renderContent()}</div>
+          <div key={activeTab} className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {renderContent()}
+          </div>
         </main>
       </div>
     </div>
