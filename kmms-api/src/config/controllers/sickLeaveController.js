@@ -46,4 +46,17 @@ exports.reviewSickLeave = async (req, res) => {
   res.json(sl);
 };
 
+// get all leaves for admin
+exports.getAllLeaves = async (req, res) => {
+  const leaves = await SickLeave.find().populate('teacher', 'name email').sort({ submittedAt: -1 });
+  res.json(leaves);
+};
+
+// get my leaves (teacher)
+exports.getTeacherLeaves = async (req, res) => {
+  const teacherId = req.user.id;
+  const leaves = await SickLeave.find({ teacher: teacherId }).sort({ submittedAt: -1 });
+  res.json(leaves);
+};
+
 module.exports = exports;
